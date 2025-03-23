@@ -1,16 +1,23 @@
-from datetime import datetime
 from pydantic import BaseModel
+from profiles.dataclasses import Profile
 
 
-class User(BaseModel):
-    uid: int
-    display_name: str
-    email: str
-    phone: str
-    providers: str
-    provider_type: str
-    created_at: datetime
-    last_sign_in_at: datetime
+class TokensResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+
+    class Config:
+        from_attributes = True
+
+class AuthCallbackResponse(BaseModel):
+    tokens: TokensResponse
+    profile: Profile | None
+
+    class Config:
+        from_attributes = True
+
+class RefreshTokensRequest(BaseModel):
+    refresh_token: str
 
     class Config:
         from_attributes = True
