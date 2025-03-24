@@ -3,7 +3,7 @@ from core.db_connection import supabase
 
 
 class TestLessonsService:
-    async def get_test_lessons(self):
+    async def get_test_lessons(self) -> list[TestLesson]:
 
         test_lessons = (
             supabase.table("test_lessons")
