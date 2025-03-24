@@ -3,41 +3,20 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-class Offer(BaseModel):
+class offer(BaseModel):
     id: int
-    created_at: datetime
-    tutor_profile_id: int
+    tutor_id: int
     title: str
     description: str
-    subject: str
+    subject_id: int
     price: float
-    duration: int  # Duration in minutes
-    is_active: bool
-
-    class Config:
-        from_attributes = True
 
 
-class CreateOffer(BaseModel):
-    tutor_profile_id: int
-    title: str
-    description: str
+class offer_level(BaseModel):
+    offer_id: int
+    level_id: int
+
+
+class subjects(BaseModel):
+    id: int
     subject: str
-    price: float
-    duration: int  # Duration in minutes
-    is_active: bool = True
-
-    class Config:
-        from_attributes = True
-
-
-class UpdateOffer(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    subject: Optional[str] = None
-    price: Optional[float] = None
-    duration: Optional[int] = None
-    is_active: Optional[bool] = None
-
-    class Config:
-        from_attributes = True
