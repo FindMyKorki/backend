@@ -4,24 +4,24 @@ from typing import Optional
 
 
 class Review(BaseModel):
-    id: str  # Changed to uuid (str)
+    id: str
     created_at: datetime
-    booking_id: str  # Changed to uuid (str)
-    student_id: str  # Renamed from user_id to student_id
-    tutor_id: str  # Renamed from tutor_profile_id to tutor_id
+    booking_id: str
+    student_id: str
+    tutor_id: str
     rating: int
-    comment: str  # Removed Optional, made it required
+    comment: str
 
     class Config:
         from_attributes = True
 
 
 class CreateReview(BaseModel):
-    booking_id: str  # Changed to uuid (str)
-    student_id: str  # Renamed from user_id to student_id
-    tutor_id: str  # Renamed from tutor_profile_id to tutor_id
+    booking_id: str
+    student_id: str
+    tutor_id: str
     rating: int
-    comment: str  # Removed Optional, made it required
+    comment: str
 
     class Config:
         from_attributes = True

@@ -24,7 +24,7 @@ class OffersService:
     async def get_tutor_offers(self, tutor_profile_id: int, active_only: bool = False) -> list[Offer]:
         query = (
             supabase.table("offers")
-            .select("*, description:hidden")  # Select all columns except description
+            .select("*, description:hidden")
             .eq("tutor_profile_id", tutor_profile_id)
         )
 
@@ -46,7 +46,6 @@ class OffersService:
         return f"Created new offer with id {offer_id}"
 
     async def update_offer(self, offer_id: int, update_data: UpdateOffer) -> str:
-        # Filter out None values
         update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
 
         if not update_dict:

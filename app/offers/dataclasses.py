@@ -4,23 +4,23 @@ from typing import Optional
 
 
 class Offer(BaseModel):
-    id: str  # uuid
+    id: str
     created_at: datetime
-    tutor_id: str  # Changed from tutor_profile_id to tutor_id
-    subject_id: str  # uuid
+    tutor_id: str
+    subject_id: str
     price: float
     title: str
-    description: Optional[str]  # Made optional as per comment
+    description: Optional[str]
 
     class Config:
         from_attributes = True
 
 
 class Subjects(BaseModel):
-    id: str  # uuid
+    id: str
     subject: str
 
 
 class OfferLevel(BaseModel):
-    offer_id: str  # uuid
-    level_id: str  # uuid
+    offer_id: str
+    level_id: str

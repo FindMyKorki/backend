@@ -6,8 +6,8 @@ from typing import Dict, Any
 
 
 class TutorProfile(BaseModel):
-    id: str  # uuid
-    user_id: str  # uuid
+    id: str
+    user_id: str
     full_name: str
     bio: str
     price_per_hour: float
@@ -20,7 +20,7 @@ class TutorProfile(BaseModel):
 
 
 class CreateTutorProfile(BaseModel):
-    user_id: str  # uuid
+    user_id: str
     full_name: str
     bio: str
     price_per_hour: float
