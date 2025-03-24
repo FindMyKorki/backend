@@ -24,7 +24,7 @@ class OffersService:
     async def get_tutor_offers(self, tutor_profile_id: int, active_only: bool = False) -> list[Offer]:
         query = (
             supabase.table("offers")
-            .select("*")
+            .select("*, description:hidden")  # Select all columns except description
             .eq("tutor_profile_id", tutor_profile_id)
         )
 
