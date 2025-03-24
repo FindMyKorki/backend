@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from profiles.dataclasses import Profile
+from gotrue import OAuthResponse
 
 
 class TokensResponse(BaseModel):
@@ -9,7 +10,7 @@ class TokensResponse(BaseModel):
     class Config:
         from_attributes = True
 
-class AuthCallbackResponse(BaseModel):
+class CodeForSessionResponse(BaseModel):
     tokens: TokensResponse
     profile: Profile | None
 
@@ -18,6 +19,19 @@ class AuthCallbackResponse(BaseModel):
 
 class RefreshTokensRequest(BaseModel):
     refresh_token: str
+
+    class Config:
+        from_attributes = True
+
+class SignInResponse(BaseModel):
+    code_verifier: str
+    oauth_repsponse: OAuthResponse
+
+    class Config:
+        from_attributes = True
+
+class CallbackResponse(BaseModel):
+    code: str
 
     class Config:
         from_attributes = True

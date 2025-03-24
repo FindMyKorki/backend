@@ -10,5 +10,6 @@ supabase: Client = create_client(
     SUPABASE_KEY,
     options=ClientOptions(
         auto_refresh_token=False,
+        persist_session=False
         )
 )
