@@ -12,12 +12,12 @@ class BookingStatus(str, Enum):
 
 
 class Booking(BaseModel):
-    id: int
+    id: str  # uuid
     created_at: datetime
-    user_id: int
-    offer_id: int
-    start_time: datetime
-    end_time: datetime
+    user_id: str  # uuid
+    offer_id: str  # uuid
+    start_date: datetime  # Changed from start_time
+    end_date: datetime  # Changed from end_time
     status: BookingStatus
     notes: Optional[str] = None
 
@@ -26,10 +26,10 @@ class Booking(BaseModel):
 
 
 class CreateBooking(BaseModel):
-    user_id: int
-    offer_id: int
-    start_time: datetime
-    end_time: datetime
+    user_id: str  # uuid
+    offer_id: str  # uuid
+    start_date: datetime  # Changed from start_time
+    end_date: datetime  # Changed from end_time
     notes: Optional[str] = None
     status: BookingStatus = BookingStatus.PENDING
 
@@ -38,8 +38,8 @@ class CreateBooking(BaseModel):
 
 
 class UpdateBooking(BaseModel):
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    start_date: Optional[datetime] = None  # Changed from start_time
+    end_date: Optional[datetime] = None  # Changed from end_time
     status: Optional[BookingStatus] = None
     notes: Optional[str] = None
 

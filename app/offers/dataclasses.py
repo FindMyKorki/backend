@@ -3,20 +3,24 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-class offer(BaseModel):
-    id: int
-    tutor_id: int
-    title: str
-    description: str
-    subject_id: int
+class Offer(BaseModel):
+    id: str  # uuid
+    created_at: datetime
+    tutor_id: str  # Changed from tutor_profile_id to tutor_id
+    subject_id: str  # uuid
     price: float
+    title: str
+    description: Optional[str]  # Made optional as per comment
+
+    class Config:
+        from_attributes = True
 
 
-class offer_level(BaseModel):
-    offer_id: int
-    level_id: int
-
-
-class subjects(BaseModel):
-    id: int
+class Subjects(BaseModel):
+    id: str  # uuid
     subject: str
+
+
+class OfferLevel(BaseModel):
+    offer_id: str  # uuid
+    level_id: str  # uuid
