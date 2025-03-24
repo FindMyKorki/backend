@@ -20,14 +20,6 @@ async def get_tutor_profile(profile_id: int = Path(..., title="The ID of the tut
     return profile
 
 
-@tutor_profiles_router.get("/tutor-profile/user/{user_id}", response_model=TutorProfile)
-async def get_tutor_profile_by_user(user_id: int = Path(..., title="The user ID")):
-    profile = await tutor_profiles_service.get_tutor_profile_by_user(user_id)
-    if not profile:
-        raise HTTPException(status_code=404, detail="Tutor profile not found for this user")
-    return profile
-
-
 @tutor_profiles_router.post("/tutor-profile", response_model=str)
 async def create_tutor_profile(create_tutor_profile_data: CreateTutorProfile):
     return await tutor_profiles_service.create_tutor_profile(create_tutor_profile_data)
