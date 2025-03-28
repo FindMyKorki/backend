@@ -18,14 +18,6 @@ async def get_profile_data(id: str) -> Profile:
     )
 
     if profile.data and len(profile.data) > 0:
-        p_d = profile.data[0]
-        profile = Profile(
-            id=p_d.get('id'),
-            full_name=p_d.get('full_name'),
-            is_tutor=p_d.get('is_tutor'),
-            email=user.user_metadata.get('email'), 
-            avatar_url=user.user_metadata.get('avatar_url')
-        )
-        return profile
+        return profile.data[0]
     
     return None
