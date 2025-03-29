@@ -30,7 +30,7 @@ async def get_tutor_available_hours(
     
     Note: It's recommended to include the 'Z' suffix in datetime parameters to explicitly specify UTC timezone.
     """
-    # Ensure dates have timezone information
+
     start_date = standardize_datetime(start_date)
     
     if end_date is None:
