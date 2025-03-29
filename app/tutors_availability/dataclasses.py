@@ -7,7 +7,6 @@ class AvailableTimeBlock(BaseModel):
     start_date: datetime
     end_date: datetime
 
-    # Serializer to ensure consistent timezone format in JSON responses
     @field_serializer('start_date', 'end_date')
     def serialize_datetime(self, dt: datetime) -> str:
         if dt.tzinfo is None:
