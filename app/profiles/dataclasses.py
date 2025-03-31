@@ -6,7 +6,6 @@ class Profile(BaseModel):
     id: str
     full_name: str
     is_tutor: bool
-    email: str
     avatar_url: str
 
     class Config:
