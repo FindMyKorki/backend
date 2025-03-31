@@ -77,28 +77,19 @@ class TutorsAvailabilityService:
     
     async def _get_tutor_confirmed_bookings(self, tutor_id: str):
         """Retrieves all confirmed bookings for a tutor from the database"""
-        bookings = (
-            supabase.table("bookings")
-            .select("*")
-            .eq("status", "confirmed")
-            .execute()
-        )
-        
-        confirmed_bookings = []
-        for booking in bookings.data:
-            offer_id = booking.get("offer_id")
-            if offer_id:
-                offer = (
-                    supabase.table("offers")
-                    .select("*")
-                    .eq("id", offer_id)
-                    .eq("tutor_id", tutor_id)
-                    .execute()
-                )
-                if offer.data and len(offer.data) > 0:
-                    confirmed_bookings.append(booking)
-        
-        return confirmed_bookings
+        try:
+            confirmed_bookings = (
+                supabase.table("bookings")
+                .select("bookings.*")
+                .eq("bookings.status", "confirmed")
+                .eq("offers.tutor_id", tutor_id)
+                .join("offers", "bookings.offer_id", "offers.id")
+                .execute()
+            )
+            
+            return confirmed_bookings.data
+        except Exception:
+            return []
     
     def _generate_availability_blocks(self, availabilities, start_date: datetime, end_date: datetime) -> List[Tuple[datetime, datetime]]:
         """Generates all availability blocks for a tutor within the specified date range"""
