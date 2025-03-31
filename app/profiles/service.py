@@ -1,32 +1,28 @@
-from .dataclasses import CreateProfile, Profile
-from .utils import get_profile_data
-from fastapi import HTTPException
-from core.db_connection import supabase
+from .dataclasses import UpsertProfile, Profile
+from crud.crud_provider import CRUDProvider
+
+
+crud_provider = CRUDProvider('profiles')
 
 
 class ProfilesService:
-    async def create_profile(self, create_profile: CreateProfile, user_id: str) -> Profile:
-        create_profile = create_profile.model_dump()
-        create_profile['id'] = user_id
-        
-        profile = await get_profile_data(user_id)
+    async def create_profile(self, profile: UpsertProfile, user_id: str) -> Profile:
+        new_profile = await crud_provider.create(profile.model_dump(), user_id)
 
-        if profile:
-            raise HTTPException(409, 'Profile already exists')
+        return Profile.model_validate(new_profile)
 
-        new_profile = (
-            supabase.table('profiles')
-            .insert(create_profile)
-            .execute()
-        )
+    async def get_profile(self, id: str) -> Profile:
+        profile = await crud_provider.get(id)
 
-        return await get_profile_data(user_id)
-    
-    async def get_profile(self, id: str):
-        profile = await get_profile_data(id)
+        return Profile.model_validate(profile)
 
-        if not profile:
-            raise HTTPException(404, 'Profile not found')
+    async def update_profile(self, id: str, profile: UpsertProfile) -> Profile:
+        updated_profile = await crud_provider.update(id, profile.model_dump())
 
-        return profile
+        return Profile.model_validate(updated_profile)
+
+    async def delete_profile(self, id: str):
+        deleted_profile = await crud_provider.delete(id)
+
+        return Profile.model_validate(deleted_profile)
     
