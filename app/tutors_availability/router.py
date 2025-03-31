@@ -30,7 +30,6 @@ async def get_tutor_available_hours(
     
     Note: It's recommended to include the 'Z' suffix in datetime parameters to explicitly specify UTC timezone.
     """
-    # Create request with defaults
     request = TutorAvailabilityRequest(
         start_date=start_date,
         end_date=end_date
@@ -59,7 +58,6 @@ async def get_tutor_available_hours_post(
     
     Note: It's recommended to include the 'Z' suffix in datetime parameters to explicitly specify UTC timezone.
     """
-    # Create request with defaults if not provided
     if request is None:
         request = TutorAvailabilityRequest()
     
