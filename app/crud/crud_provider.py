@@ -3,18 +3,23 @@ from fastapi import HTTPException
 
 
 class CRUDProvider:
-    def __init__(self, table_name: str):
+    def __init__(self, table_name: str, owner_id_name: str = None):
         self.table_name = table_name
+        self.owner_id_name = owner_id_name
 
-    async def get(self, id: str):
+    async def get(self, id: str | int, owner_id: str = None):
         try:
-            response = (
+            query = (
                 supabase.table(self.table_name)
                 .select('*')
                 .eq('id', id)
-                .execute()
             )
-        
+
+            if owner_id and self.owner_id_name:
+                query.eq(self.owner_id_name, owner_id)
+
+            response = query.execute()
+
         except Exception as e:
             raise HTTPException(500, f'Error fetching object: {e.message}')
 
@@ -23,13 +28,17 @@ class CRUDProvider:
 
         return response.data[0]
 
-    async def get_all(self):
+    async def get_all(self, owner_id: str = None):
         try:
-            response = (
+            query = (
                 supabase.table(self.table_name)
                 .select('*')
-                .execute()
             )
+
+            if owner_id and self.owner_id_name:
+                query.eq(self.owner_id_name, owner_id)
+
+            response = query.execute()
 
         except Exception as e:
             raise HTTPException(500, f'Error fetching objects: {e.message}')
@@ -58,35 +67,43 @@ class CRUDProvider:
 
         return response.data[0]
 
-    async def update(self, id: str, data: dict):
+    async def update(self, id: str | int, data: dict, owner_id: str = None):
         try:
-            response = (
+            query = (
                 supabase.table(self.table_name)
                 .update(data)
                 .eq('id', id)
-                .execute()
             )
+
+            if owner_id and self.owner_id_name:
+                query.eq(self.owner_id_name, owner_id)
+
+            response = query.execute()
 
         except Exception as e:
             raise HTTPException(500, f'Failed to update object: {e.message}')
-        
+
         if not response.data or len(response.data) == 0:
             raise HTTPException(404, 'Object not found or no changes applied')
 
         return response.data[0]
 
-    async def delete(self, id: str):
+    async def delete(self, id: str | int, owner_id: str = None):
         try:
-            response = (
+            query = (
                 supabase.table(self.table_name)
                 .delete()
                 .eq('id', id)
-                .execute()
             )
+
+            if owner_id and self.owner_id_name:
+                query.eq(self.owner_id_name, owner_id)
+
+            response = query.execute()
 
         except Exception as e:
             raise HTTPException(500, f'Failed to delete object: {e.message}')
-    
+
         if not response.data or len(response.data) == 0:
             raise HTTPException(404, 'Object not found')
 

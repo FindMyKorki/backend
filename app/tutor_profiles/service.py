@@ -11,7 +11,7 @@ class TutorProfilesService:
 
         return TutorProfile.model_validate(new_tutor_profile)
 
-    async def get_tutor_profile(self, id) -> TutorProfile:
+    async def get_tutor_profile(self, id: str) -> TutorProfile:
         tutor_profile: dict = await crud_provider.get(id)
 
         return TutorProfile.model_validate(tutor_profile)
