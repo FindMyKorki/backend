@@ -36,11 +36,9 @@ class TutorAvailabilityRequest(BaseModel):
     
     def __init__(self, **data):
         super().__init__(**data)
-        # Set default end_date to the end of current month if not provided
         if self.end_date is None:
             self.end_date = get_end_of_current_month()
         
-        # Ensure both dates have timezone information
         if self.start_date.tzinfo is None:
             self.start_date = self.start_date.replace(tzinfo=timezone.utc)
         if self.end_date.tzinfo is None:
