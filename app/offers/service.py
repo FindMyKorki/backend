@@ -20,7 +20,6 @@ class OffersService:
             .single()
             .execute()
         )
-        print(response.data)
 
         if response.data is None:
             raise HTTPException(status_code=404, detail="Offer not found")
@@ -41,6 +40,22 @@ class OffersService:
                 "price": request.price,
                 "description": request.description,
                 "level_id": request.level_id})
+            .eq("id", offer_id)
+            .execute()
+        )
+
+        return offer.id
+
+    async def disable_enable_offer(self, offer_id: int, is_active: bool) -> int:
+        service = OffersService()
+        offer = await service.get_offer(offer_id)
+
+        if not offer:
+            raise HTTPException(status_code=404, detail="Offer not found")
+        update_offer = (
+            supabase
+            .table("offers")
+            .update({"is_active": is_active})
             .eq("id", offer_id)
             .execute()
         )

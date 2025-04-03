@@ -17,8 +17,16 @@ async def get_offer(offer_id: int):
 async def update_offer(offer_id: int, request: UpdateOfferRequest):
     return await offers_service.update_offer(offer_id, request)
 
-# POST /offers/{offer_id}:disable
-# POST /offers/{offer_id}:enable
+
+@offers_router.post("/offers/{offer_id}:disable")
+async def disable_offer(offer_id: int):
+    return await offers_service.disable_enable_offer(offer_id, False)
+
+
+@offers_router.post("/offers/{offer_id}:enable")
+async def enable_offer(offer_id: int):
+    return await offers_service.disable_enable_offer(offer_id, True)
+
 
 # GET /tutor-offers/{tutor_id}
 # GET /tutor-offers/{offer_id}
