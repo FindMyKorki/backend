@@ -1,8 +1,8 @@
 from core.db_connection import supabase
 from fastapi import HTTPException
 
-from .dataclasses import OfferResponse, UpdateOfferRequest
-from .utils import flatten_offer_data
+from .dataclasses import OfferResponse, UpdateOfferRequest, TutorOfferResponse
+from .utils import flatten_offer_data, flatten_tutor_offers_data, flatten_tutor_offer_data
 
 
 class OffersService:
@@ -61,3 +61,31 @@ class OffersService:
         )
 
         return offer.id
+
+    async def get_tutor_offers(self, tutor_id: str) -> list[TutorOfferResponse]:
+        offers = (
+            supabase
+            .table("offers")
+            .select("id, price, subjects(name:subject_name, icon_url), levels(level), is_active")
+            .eq("tutor_id", str(tutor_id))
+            .execute()
+        )
+
+        if offers.data is None or len(offers.data) == 0:
+            raise HTTPException(status_code=404, detail="Offers not found")
+
+        return flatten_tutor_offers_data(offers.data)
+
+    async def get_tutor_offer(self, offer_id: int) -> TutorOfferResponse:
+        offers = (
+            supabase
+            .table("offers")
+            .select("id, price, subjects(name:subject_name, icon_url), levels(level), is_active")
+            .eq("id", offer_id)
+            .execute()
+        )
+
+        if offers.data is None or len(offers.data) == 0:
+            raise HTTPException(status_code=404, detail="Offers not found")
+
+        return flatten_tutor_offer_data(offers.data[0])
