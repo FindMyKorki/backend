@@ -12,3 +12,10 @@ class OfferResponse(BaseModel):
     subject_name: Optional[str] = None
     level: Optional[str] = None
     icon_url: Optional[str] = None
+
+
+class UpdateOfferRequest(BaseModel):
+    subject_id: Optional[int] = None
+    price: Optional[float] = None
+    description: Optional[str] = None
+    level_id: int
