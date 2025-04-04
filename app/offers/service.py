@@ -1,8 +1,8 @@
 from core.db_connection import supabase
 from fastapi import HTTPException
 
-from .dataclasses import OfferResponse, UpdateOfferRequest, TutorOfferResponse
-from .utils import flatten_offer_data, flatten_tutor_offers_data, flatten_tutor_offer_data
+from .dataclasses import OfferResponse, UpdateOfferRequest, TutorOfferResponse, ActiveOfferResponse
+from .utils import flatten_offer_data, flatten_tutor_offers_data, flatten_tutor_offer_data, flatten_active_offers
 
 
 class OffersService:
@@ -89,3 +89,37 @@ class OffersService:
             raise HTTPException(status_code=404, detail="Offers not found")
 
         return flatten_tutor_offer_data(offers.data[0])
+
+    async def get_tutor_active_offer(self, tutor_id: str) -> list[TutorOfferResponse]:
+        offers = (
+            supabase
+            .table("offers")
+            .select("id, price, subjects(name:subject_name, icon_url), levels(level), is_active")
+            .eq("tutor_id", tutor_id)
+            .eq("is_active", True)
+            .execute()
+        )
+
+        if offers.data is None or len(offers.data) == 0:
+            raise HTTPException(status_code=404, detail="Offers not found")
+
+        return flatten_tutor_offers_data(offers.data)
+
+    async def get_active_offers(self, sort_by: str, order: str) -> list[ActiveOfferResponse]:
+        offers = (
+            supabase
+            .table("offers")
+            .select(
+                "id, price, "
+                "tutor_profiles(rating, profiles(full_name, avatar_url)), "
+                "subjects(name:subject_name, icon_url), "
+                "levels(level)"
+            )
+            .eq("is_active", True)
+            .execute()
+        )
+
+        if offers.data is None or len(offers.data) == 0:
+            raise HTTPException(status_code=404, detail="Offers not found")
+
+        return flatten_active_offers(offers.data)

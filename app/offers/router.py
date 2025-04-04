@@ -1,12 +1,24 @@
-from fastapi import APIRouter, Depends, Path
+from enum import Enum
+from fastapi import APIRouter, Depends, Path, Query
+from typing_extensions import Literal
 from users.auth import authenticate_user
 
-
-from .dataclasses import OfferResponse, UpdateOfferRequest, TutorOfferResponse
+from .dataclasses import OfferResponse, UpdateOfferRequest, TutorOfferResponse, ActiveOfferResponse
 from .service import OffersService
 
 offers_router = APIRouter()
 offers_service = OffersService()
+
+
+class SortBy(str, Enum):
+    rating = "rating"
+    price = "price"
+    reviews = "reviews"
+
+
+class Order(str, Enum):
+    increasing = "increasing"
+    decreasing = "decreasing"
 
 
 @offers_router.get("/offers/{offer_id}", response_model=OfferResponse)
@@ -39,5 +51,14 @@ async def get_tutor_offer(offer_id: int) -> TutorOfferResponse:
     return await offers_service.get_tutor_offer(offer_id)
 
 
-# GET /active-offers/{tutor_id}
-# GET /active-offers?sort_by=&order=
+@offers_router.get("/active-offers/{tutor_id}", response_model=list[TutorOfferResponse])
+async def get_tutor_active_offer(tutor_id: str) -> list[TutorOfferResponse]:
+    return await offers_service.get_tutor_active_offer(tutor_id)
+
+
+@offers_router.get("/active-offers", response_model=list[ActiveOfferResponse])
+async def get_active_offers(
+        sort_by: SortBy = Query(...),
+        order: Order = Query(...)
+) -> list[TutorOfferResponse]:
+    return await offers_service.get_active_offers(sort_by, order)

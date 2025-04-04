@@ -1,7 +1,7 @@
 from core.db_connection import supabase
 from fastapi import HTTPException
 
-from .dataclasses import OfferResponse, TutorOfferResponse
+from .dataclasses import OfferResponse, TutorOfferResponse, ActiveOfferResponse
 
 
 def get_offers(offer_id: int) -> list[OfferResponse]:
@@ -58,3 +58,26 @@ def flatten_tutor_offer_data(data: dict) -> TutorOfferResponse:
     )
 
     return result
+
+
+def flatten_active_offers(data: list[dict]) -> list[ActiveOfferResponse]:
+    result = []
+    for offer in data:
+        tutor_profile = offer.pop("tutor_profiles", {}) or {}
+        profile = tutor_profile.pop("profiles", {}) or {}
+        subject = offer.pop("subjects", {}) or {}
+        level = offer.pop("levels", {}) or {}
+        result.append(
+            ActiveOfferResponse(
+                id=offer.get("id"),
+                tutor_full_name=profile.get("full_name", "Unknown"),
+                tutor_url=profile.get("avatar_url"),
+                tutor_rating=tutor_profile.get("rating"),
+                price=offer.get("price"),
+                subject_name=subject.get("name"),
+                icon_url=subject.get("icon_url"),
+                level=level.get("level"),
+            )
+        )
+
+        return result
