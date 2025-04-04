@@ -12,7 +12,7 @@ class OffersService:
             .table("offers")
             .select(
                 "id, description, price, "
-                "tutor_profiles(id, rating, profiles(full_name)), "
+                "tutor_profiles(id, rating, profiles(full_name, avatar_url)), "
                 "subjects(name:subject_name, icon_url), "
                 "levels(level)"
             )

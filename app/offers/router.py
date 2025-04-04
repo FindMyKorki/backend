@@ -27,26 +27,26 @@ async def get_offer(offer_id: int):
 
 
 @offers_router.put("/offers/{offer_id}", response_model=int)
-async def update_offer(offer_id: int, request: UpdateOfferRequest):
+async def update_offer(offer_id: int, request: UpdateOfferRequest) -> int:
     return await offers_service.update_offer(offer_id, request)
 
 
-@offers_router.post("/offers/{offer_id}:disable")
-async def disable_offer(offer_id: int):
+@offers_router.post("/offers/{offer_id}:disable", response_model=int)
+async def disable_offer(offer_id: int) -> int:
     return await offers_service.disable_enable_offer(offer_id, False)
 
 
-@offers_router.post("/offers/{offer_id}:enable")
-async def enable_offer(offer_id: int):
+@offers_router.post("/offers/{offer_id}:enable", response_model=int)
+async def enable_offer(offer_id: int) -> int:
     return await offers_service.disable_enable_offer(offer_id, True)
 
 
-@offers_router.get("/tutor-offers/by-tutor/{tutor_id}")
+@offers_router.get("/tutor-offers/by-tutor/{tutor_id}", response_model=list[TutorOfferResponse])
 async def get_tutor_offers(tutor_id: str) -> list[TutorOfferResponse]:
     return await offers_service.get_tutor_offers(tutor_id)
 
 
-@offers_router.get("/tutor-offers/by-id/{offer_id}")
+@offers_router.get("/tutor-offers/by-id/{offer_id}", response_model=TutorOfferResponse)
 async def get_tutor_offer(offer_id: int) -> TutorOfferResponse:
     return await offers_service.get_tutor_offer(offer_id)
 

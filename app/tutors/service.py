@@ -1,7 +1,8 @@
+from core.db_connection import supabase
+from fastapi import HTTPException
+
 from .dataclasses import CreateTutorProfileRequest, TutorResponse
 from .utils import get_tutor_profile_data
-from fastapi import HTTPException
-from core.db_connection import supabase
 
 
 class TutorService:
@@ -26,7 +27,7 @@ class TutorService:
 
         return user_id
 
-    async def get_tutor_profile(self, tutor_id: str):
+    async def get_tutor_profile(self, tutor_id: str) -> TutorResponse:
         tutor_profile = await get_tutor_profile_data(tutor_id)
 
         if not tutor_profile:

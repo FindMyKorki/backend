@@ -28,7 +28,7 @@ def flatten_offer_data(data: dict) -> OfferResponse:
         id=data["id"],
         description=data.get("description"),
         tutor_full_name=profile.get("full_name", "Unknown"),
-        tutor_url=None,  # Domyślnie `None`
+        tutor_avatar_url=profile.get("avatar_url"),
         tutor_rating=tutor_profile.get("rating"),
         price=data.get("price"),
         subject_name=subject.get("name"),
@@ -71,7 +71,7 @@ def flatten_active_offers(data: list[dict]) -> list[ActiveOfferResponse]:
             ActiveOfferResponse(
                 id=offer.get("id"),
                 tutor_full_name=profile.get("full_name", "Unknown"),
-                tutor_url=profile.get("avatar_url"),
+                tutor_avatar_url=profile.get("avatar_url"),
                 tutor_rating=tutor_profile.get("rating"),
                 price=offer.get("price"),
                 subject_name=subject.get("name"),

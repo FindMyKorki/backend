@@ -1,6 +1,7 @@
-from .dataclasses import TutorResponse
 from core.db_connection import supabase
 from fastapi import HTTPException
+
+from .dataclasses import TutorResponse
 
 
 async def get_tutor_profile_data(tutor_id: str) -> TutorResponse:

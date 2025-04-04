@@ -1,7 +1,8 @@
-from .service import TutorService
-from .dataclasses import CreateTutorProfileRequest, TutorResponse
-from users.auth import authenticate_user
 from fastapi import APIRouter, Depends
+from users.auth import authenticate_user
+
+from .dataclasses import CreateTutorProfileRequest, TutorResponse
+from .service import TutorService
 
 tutor_router = APIRouter()
 tutor_service = TutorService()
