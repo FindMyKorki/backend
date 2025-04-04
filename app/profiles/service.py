@@ -17,7 +17,7 @@ class ProfilesService:
         return Profile.model_validate(profile)
 
     async def update_profile(self, id: str, profile: UpsertProfile) -> Profile:
-        updated_profile = await crud_provider.update(id, profile.model_dump())
+        updated_profile = await crud_provider.update(profile.model_dump(), id)
 
         return Profile.model_validate(updated_profile)
 

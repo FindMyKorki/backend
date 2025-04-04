@@ -20,7 +20,7 @@ class UserReportsService:
         return UserReport.model_validate(user_report)
 
     async def update_user_report(self, user_id, user_report: UpdateUserReportRequest) -> UserReport:
-        updated_user_report = await crud_provider.update(user_report.id, user_report.model_dump(exclude='id'), user_id)
+        updated_user_report = await crud_provider.update(user_report.model_dump(exclude='id'), user_report.id, user_id)
 
         return UserReport.model_validate(updated_user_report)
 

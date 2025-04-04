@@ -17,7 +17,7 @@ class TutorProfilesService:
         return TutorProfile.model_validate(tutor_profile)
 
     async def update_tutor_profile(self, id: str, profile: UpsertTutorProfile) -> TutorProfile:
-        updated_tutor_profile = await crud_provider.update(id, profile.model_dump())
+        updated_tutor_profile = await crud_provider.update(profile.model_dump(), id)
 
         return TutorProfile.model_validate(updated_tutor_profile)
 

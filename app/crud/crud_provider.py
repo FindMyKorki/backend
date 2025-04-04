@@ -1,5 +1,11 @@
 from core.db_connection import supabase
-from fastapi import HTTPException
+from postgrest import SyncQueryRequestBuilder
+
+
+class CRUDException(Exception):
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)
 
 
 class CRUDProvider:
@@ -7,104 +13,91 @@ class CRUDProvider:
         self.table_name = table_name
         self.owner_id_name = owner_id_name
 
-    async def get(self, id: str | int, owner_id: str = None):
-        try:
-            query = (
-                supabase.table(self.table_name)
-                .select('*')
-                .eq('id', id)
-            )
+    async def get(self, id: str | int, owner_id: str = None) -> dict:
+        query = (
+            supabase.table(self.table_name)
+            .select('*')
+            .eq('id', id)
+        )
 
-            if owner_id and self.owner_id_name:
-                query.eq(self.owner_id_name, owner_id)
+        if owner_id and self.owner_id_name:
+            query.eq(self.owner_id_name, owner_id)
 
-            response = query.execute()
+        data = await self.__execute_query(query)
 
-        except Exception as e:
-            raise HTTPException(500, f'Error fetching object: {e.message}')
+        return data[0]
 
-        if not response.data or len(response.data) == 0:
-            raise HTTPException(404, 'Object not found')
+    async def get_all(self, owner_id: str = None) -> list[dict]:
+        query = (
+            supabase.table(self.table_name)
+            .select('*')
+        )
 
-        return response.data[0]
+        if owner_id and self.owner_id_name:
+            query.eq(self.owner_id_name, owner_id)
 
-    async def get_all(self, owner_id: str = None):
-        try:
-            query = (
-                supabase.table(self.table_name)
-                .select('*')
-            )
+        data = await self.__execute_query(query)
 
-            if owner_id and self.owner_id_name:
-                query.eq(self.owner_id_name, owner_id)
+        return data
 
-            response = query.execute()
-
-        except Exception as e:
-            raise HTTPException(500, f'Error fetching objects: {e.message}')
-
-        if not response.data:
-            raise HTTPException(404, 'No objects found')
-
-        return response.data
-
-    async def create(self, data: dict, id: str = None):
+    async def create(self, data: dict, id: str = None) -> dict:
         if id:
             data['id'] = id
 
+        query = (
+            supabase.table(self.table_name)
+            .insert(data)
+        )
+
+        data = await self.__execute_query(query)
+
+        return data[0]
+
+    async def update(self, data: dict, id: str | int = None, owner_id: str = None) -> dict:
+        if not id:
+            if not "id" in data.keys():
+                raise CRUDException('No id provided')
+            id = data["id"]
+
+        query = (
+            supabase.table(self.table_name)
+            .update(data)
+            .eq('id', id)
+        )
+
+        if owner_id and self.owner_id_name:
+            query.eq(self.owner_id_name, owner_id)
+
+        data = await self.__execute_query(query)
+
+        return data[0]
+
+    async def delete(self, id: str | int, owner_id: str = None) -> dict:
+        query = (
+            supabase.table(self.table_name)
+            .delete()
+            .eq('id', id)
+        )
+
+        if owner_id and self.owner_id_name:
+            query.eq(self.owner_id_name, owner_id)
+
+        data = await self.__execute_query(query)
+
+        return data[0]
+
+    async def __execute_query(self, query: SyncQueryRequestBuilder) -> list[dict]:
         try:
-            response = (
-                supabase.table(self.table_name)
-                .insert(data)
-                .execute()
-            )
-
-        except Exception as e:
-            raise HTTPException(409, f'Failed to create object: {e.message}')
-
-        if not response.data or len(response.data) == 0:
-            raise HTTPException(500, 'Failed to create object')
-
-        return response.data[0]
-
-    async def update(self, id: str | int, data: dict, owner_id: str = None):
-        try:
-            query = (
-                supabase.table(self.table_name)
-                .update(data)
-                .eq('id', id)
-            )
-
-            if owner_id and self.owner_id_name:
-                query.eq(self.owner_id_name, owner_id)
 
             response = query.execute()
 
         except Exception as e:
-            raise HTTPException(500, f'Failed to update object: {e.message}')
+            raise CRUDException(f'Error while executing query: {e}')
+        
+        if not response.data:
+            raise CRUDException(f'No response from query')
 
-        if not response.data or len(response.data) == 0:
-            raise HTTPException(404, 'Object not found or no changes applied')
+        if len(response.data) == 0:
+            raise CRUDException(f'Table {self.table_name} has not been affected by the query')
 
-        return response.data[0]
-
-    async def delete(self, id: str | int, owner_id: str = None):
-        try:
-            query = (
-                supabase.table(self.table_name)
-                .delete()
-                .eq('id', id)
-            )
-
-            if owner_id and self.owner_id_name:
-                query.eq(self.owner_id_name, owner_id)
-
-            response = query.execute()
-
-        except Exception as e:
-            raise HTTPException(500, f'Failed to delete object: {e.message}')
-
-        if not response.data or len(response.data) == 0:
-            raise HTTPException(404, 'Object not found')
-
-        return response.data[0]
+        return response.data
