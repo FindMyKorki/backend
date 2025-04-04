@@ -5,6 +5,7 @@ from test_lessons.router import test_lessons_router
 from users.router import users_router
 from profiles.router import profiles_router
 from subjects.router import subjects_router
+from levels.router import levels_router
 
 
 class Router:
@@ -18,4 +19,5 @@ registered_routers: List[Router] = [
     Router(router=users_router, tag="Users"),
     Router(router=profiles_router, tag="Profiles"),
     Router(router=subjects_router, tag="Subjects"),
+    Router(router=levels_router, tag="Levels"),
 ]
