@@ -1,19 +1,19 @@
-from fastapi import APIRouter
-from typing import List
-
-from test_lessons.router import test_lessons_router
-from users.router import users_router
-from profiles.router import profiles_router
-from tutors.router import tutor_router
-from offers.router import offers_router
-from reviews.router import reviews_router
 from availabilities.router import availabilities_router
+from fastapi import APIRouter
+from offers.router import offers_router
+from profiles.router import profiles_router
+from reviews.router import reviews_router
+from test_lessons.router import test_lessons_router
+from tutors.router import tutor_router
+from typing import List
+from users.router import users_router
 
 
 class Router:
     def __init__(self, router: APIRouter, tag: str):
         self.router = router
         self.tag = tag
+
 
 # Add routers here
 registered_routers: List[Router] = [

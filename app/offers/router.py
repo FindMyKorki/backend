@@ -1,43 +1,31 @@
-from enum import Enum
 from fastapi import APIRouter, Depends, Path, Query
 from typing_extensions import Literal
 from users.auth import authenticate_user
 
 from .dataclasses import OfferResponse, UpdateOfferRequest, TutorOfferResponse, ActiveOfferResponse
-from .service import OffersService
+from .service import OffersService, SortBy, Order
 
 offers_router = APIRouter()
 offers_service = OffersService()
 
 
-class SortBy(str, Enum):
-    rating = "rating"
-    price = "price"
-    reviews = "reviews"
-
-
-class Order(str, Enum):
-    increasing = "increasing"
-    decreasing = "decreasing"
-
-
 @offers_router.get("/offers/{offer_id}", response_model=OfferResponse)
-async def get_offer(offer_id: int):
+async def get_offer(offer_id: int) -> OfferResponse:
     return await offers_service.get_offer(offer_id)
 
 
-@offers_router.put("/offers/{offer_id}", response_model=int)
-async def update_offer(offer_id: int, request: UpdateOfferRequest) -> int:
+@offers_router.put("/offers/{offer_id}", response_model=str)
+async def update_offer(offer_id: int, request: UpdateOfferRequest) -> str:
     return await offers_service.update_offer(offer_id, request)
 
 
-@offers_router.post("/offers/{offer_id}:disable", response_model=int)
-async def disable_offer(offer_id: int) -> int:
+@offers_router.post("/offers/{offer_id}:disable", response_model=str)
+async def disable_offer(offer_id: int) -> str:
     return await offers_service.disable_enable_offer(offer_id, False)
 
 
-@offers_router.post("/offers/{offer_id}:enable", response_model=int)
-async def enable_offer(offer_id: int) -> int:
+@offers_router.post("/offers/{offer_id}:enable", response_model=str)
+async def enable_offer(offer_id: int) -> str:
     return await offers_service.disable_enable_offer(offer_id, True)
 
 

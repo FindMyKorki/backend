@@ -11,14 +11,8 @@ class CreateTutorProfileRequest(BaseModel):
         from_attributes = True
 
 
-class TutorResponse(BaseModel):
-    bio: str
+class TutorResponse(CreateTutorProfileRequest):
     rating: float
-    contact_email: Optional[str] = None
-    phone_number: Optional[str] = None
     featured_review_id: Optional[str] = None  # featured_review id
     full_name: Optional[str] = None
     avatar_url: Optional[str] = None
-
-    class Config:
-        from_attributes = True

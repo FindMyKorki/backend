@@ -1,7 +1,8 @@
-from .dataclasses import Profile
 from core.db_connection import supabase
-from supabase import AuthApiError
 from fastapi import HTTPException
+from supabase import AuthApiError
+
+from .dataclasses import Profile
 
 
 async def get_profile_data(id: str) -> Profile:
@@ -19,5 +20,5 @@ async def get_profile_data(id: str) -> Profile:
 
     if profile.data and len(profile.data) > 0:
         return profile.data[0]
-    
+
     return None
