@@ -7,6 +7,7 @@ from profiles.router import profiles_router
 from tutors.router import tutor_router
 from offers.router import offers_router
 from reviews.router import reviews_router
+from availabilities.router import availabilities_router
 
 
 class Router:
@@ -23,4 +24,5 @@ registered_routers: List[Router] = [
     Router(router=offers_router, tag="Offers"),
     Router(router=offers_router, tag="Offers"),
     Router(router=reviews_router, tag="Reviews"),
+    Router(router=availabilities_router, tag="(Un)availabilities"),
 ]
