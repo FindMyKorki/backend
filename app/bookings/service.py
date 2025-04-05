@@ -2,12 +2,12 @@ from crud.crud_provider import CRUDProvider
 from .dataclasses import Booking, UpsertBooking
 
 
-crud_provider = CRUDProvider("bookings")
+crud_provider = CRUDProvider("bookings", "offer_id")
 
 
-class BookingService:
+class BookingAttachmentService:
     async def create_booking(self, booking: UpsertBooking, id: int = None) -> Booking:
-        new_booking = await crud_provider.create(booking.model_dump(), id)
+        new_booking = await crud_provider.create(booking.model_dump(exclude="created_at"), id)
 
         return Booking.model_validate(new_booking)
 
@@ -15,9 +15,14 @@ class BookingService:
         booking = await crud_provider.get(id)
 
         return Booking.model_validate(booking)
+    
+    async def get_all_bookings(self, offer_id: int = None) -> list[Booking]:
+        bookings = await crud_provider.get_all(offer_id)
+
+        return [Booking.model_validate(booking) for booking in bookings]
 
     async def update_booking(self, booking: UpsertBooking, id: int = None) -> Booking:
-        updated_booking = await crud_provider.update(booking.model_dump(), id)
+        updated_booking = await crud_provider.update(booking.model_dump(exclude="created_at"), id)
 
         return Booking.model_validate(updated_booking)
 

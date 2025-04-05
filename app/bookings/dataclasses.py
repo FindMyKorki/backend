@@ -6,7 +6,7 @@ class UpsertBooking(BaseModel):
     student_id: str | None = None
     start_date: str              # not a datetime, because supabase doesn't support it
     end_date: str                #
-    status: str | None = None
+    status: str
     notes: str | None = None
     is_paid: bool
 
@@ -16,3 +16,5 @@ class UpsertBooking(BaseModel):
 
 class Booking(UpsertBooking):
     id: int
+    created_at: str
+

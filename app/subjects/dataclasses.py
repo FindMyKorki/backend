@@ -2,9 +2,10 @@ from pydantic import BaseModel
 
 
 class UpsertSubject(BaseModel):
-    subject_name: str
-    is_custom: bool
+    name: str
     icon_url: str | None = None
+    is_custom: bool
+
 
     class Config:
         from_attributes = True
