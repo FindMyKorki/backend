@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from core.db_connection import supabase
-from .dataclasses import Chat, Message, MessageResponse, ChatArchiveRequest, ChatReportRequest
+from .dataclasses import Chat, Message, MessageResponse, ChatReportRequest
 
 
 class ChatsService:
@@ -32,25 +32,6 @@ class ChatsService:
             
         return chats.data
     
-    async def archive_chat(self, chat_id: int, request: ChatArchiveRequest) -> str:
-        """Archive a chat"""
-        chat = (
-            supabase.table("chats")
-            .select("*")
-            .eq("id", chat_id)
-            .execute()
-        )
-        
-        if not chat.data or len(chat.data) == 0:
-            raise HTTPException(status_code=404, detail="Chat not found")
-        
-        # Update the chat archived status
-        supabase.table("chats").update(
-            {"is_archived": request.is_archived}
-        ).eq("id", chat_id).execute()
-        
-        return f"Chat {chat_id} has been {'archived' if request.is_archived else 'unarchived'}"
-    
     async def report_chat(self, chat_id: int, user_id: str, request: ChatReportRequest) -> str:
         """Report a chat"""
         chat = (
@@ -63,17 +44,27 @@ class ChatsService:
         if not chat.data or len(chat.data) == 0:
             raise HTTPException(status_code=404, detail="Chat not found")
         
-        # Create a user report for this chat
+        # Since we can't directly report a chat (only users), we'll report the other participant
+        # Get the chat data to determine who to report
+        chat_data = chat.data[0]
+        
+        # Determine which user to report (the one that's not the reporter)
+        reported_user_id = chat_data["student_id"] if user_id == chat_data["tutor_id"] else chat_data["tutor_id"]
+        
+        # Create a user report
         report_data = {
             "user_id": user_id,
-            "reported_chat_id": chat_id,
+            "reported_user_id": reported_user_id,
             "reason": request.reason,
             "message": request.message
         }
         
-        supabase.table("user_reports").insert(report_data).execute()
+        result = supabase.table("user_reports").insert(report_data).execute()
         
-        return f"Chat {chat_id} has been reported"
+        if not result.data:
+            raise HTTPException(status_code=500, detail="Failed to create report")
+        
+        return f"Chat {chat_id} participant has been reported"
     
     async def get_chat_messages(self, chat_id: int) -> MessageResponse:
         """Get all messages for a chat"""

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from users.auth import authenticate_user, authenticate_profile
 from .service import ChatsService
-from .dataclasses import Chat, MessageResponse, ChatArchiveRequest, ChatReportRequest
+from .dataclasses import Chat, MessageResponse, ChatReportRequest
 
 
 chats_router = APIRouter()
@@ -18,12 +18,6 @@ async def get_tutor_chats(tutor_id: str, user_response=Depends(authenticate_user
 async def get_student_chats(student_id: str, user_response=Depends(authenticate_user)):
     """Get all chats for a student"""
     return await chats_service.get_student_chats(student_id)
-
-
-@chats_router.post("/chats/{chat_id}:archive", response_model=str)
-async def archive_chat(chat_id: int, request: ChatArchiveRequest, user_response=Depends(authenticate_user)):
-    """Archive or unarchive a chat"""
-    return await chats_service.archive_chat(chat_id, request)
 
 
 @chats_router.post("/chats/{chat_id}:report", response_model=str)

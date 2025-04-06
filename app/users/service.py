@@ -20,7 +20,7 @@ class UsersService:
             
             return SignInResponse(
                 code_verifier=code_verifier, 
-                oauth_repsponse=response
+                oauth_response=response
                 )
             
         raise HTTPException(status_code=404, detail='Provider not found')

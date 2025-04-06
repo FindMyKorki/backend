@@ -33,13 +33,6 @@ class Chat(BaseModel):
         from_attributes = True
 
 
-class ChatArchiveRequest(BaseModel):
-    is_archived: bool = True
-
-    class Config:
-        from_attributes = True
-
-
 class ChatReportRequest(BaseModel):
     reason: str
     message: str
