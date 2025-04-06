@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-from core.routers import registered_routers
+from app.core.routers import registered_routers
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

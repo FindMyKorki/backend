@@ -1,5 +1,5 @@
-from test_lessons.dataclasses import TestLesson, CreateTestLesson
-from core.db_connection import supabase
+from app.test_lessons.dataclasses import TestLesson, CreateTestLesson
+from app.core.db_connection import supabase
 
 
 class TestLessonsService:
