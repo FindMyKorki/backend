@@ -3,7 +3,6 @@ from profiles.dataclasses import Profile
 from gotrue import OAuthResponse
 from typing import Optional
 
-
 class TokensResponse(BaseModel):
     access_token: str
     refresh_token: str
@@ -14,7 +13,7 @@ class TokensResponse(BaseModel):
 
 class CodeForSessionResponse(BaseModel):
     tokens: TokensResponse
-    profile: Profile | None
+    profile: Profile
 
     class Config:
         from_attributes = True
