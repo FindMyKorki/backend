@@ -2,7 +2,7 @@ from crud.crud_provider import CRUDProvider
 from .dataclasses import Booking, UpsertBooking
 
 
-crud_provider = CRUDProvider("notifications", "user_id")
+crud_provider = CRUDProvider("notifications")
 
 
 class NotificationService:
@@ -15,11 +15,6 @@ class NotificationService:
         notification = await crud_provider.get(id)
 
         return Booking.model_validate(notification)
-    
-    async def get_all_user_notifications(self, user_id: int) -> list[Booking]:
-        notifications = await crud_provider.get_all(user_id)
-
-        return [Booking.model_validate(notification) for notification in notifications]
 
     async def update_notification(self, notification: UpsertBooking, id: int = None) -> Booking:
         updated_notification = await crud_provider.update(notification.model_dump(exclude="created_at"), id)

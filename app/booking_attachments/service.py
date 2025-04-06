@@ -2,7 +2,7 @@ from crud.crud_provider import CRUDProvider
 from .dataclasses import BookingAttachment, UpsertBookingAttachment
 
 
-crud_provider = CRUDProvider("booking_attachments", "booking_id")
+crud_provider = CRUDProvider("booking_attachments")
 
 
 class BookingAttachmentService:
@@ -15,11 +15,6 @@ class BookingAttachmentService:
         booking_attachment = await crud_provider.get(id)
 
         return BookingAttachment.model_validate(booking_attachment)
-    
-    async def get_all_bookings_attachments(self, booking_id: int = None) -> list[BookingAttachment]:
-        booking_attachments = await crud_provider.get_all(booking_id)
-
-        return [BookingAttachment.model_validate(booking_attachment) for booking_attachment in booking_attachments]
 
     async def update_booking_attachment(self, booking_attachment: UpsertBookingAttachment, id: int = None) -> BookingAttachment:
         updated_booking_attachment = await crud_provider.update(booking_attachment.model_dump(exclude="created_at"), id)

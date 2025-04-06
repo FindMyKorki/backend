@@ -8,7 +8,7 @@ class UpsertBooking(BaseModel):
     end_date: str                #
     status: str
     notes: str | None = None
-    is_paid: bool
+    is_paid: bool = False
 
     class Config:
         from_attributes = True

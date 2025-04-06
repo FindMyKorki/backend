@@ -16,12 +16,7 @@ class SubjectService:
 
         return Subject.model_validate(subject)
 
-    async def get_all_subjects(self) -> list[Subject]:
-        subjects = await crud_provider.get_all()
-
-        return [Subject.model_validate(subject) for subject in subjects]
-
-    async def update_subject(self, subject: UpsertSubject, id: int = None) -> Subject:
+    async def update_subject(self, subject: UpsertSubject | Subject, id: int = None) -> Subject:
         updated_subject = await crud_provider.update(subject.model_dump(), id)
 
         return Subject.model_validate(updated_subject)
