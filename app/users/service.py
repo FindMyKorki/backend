@@ -1,4 +1,4 @@
-from .dataclasses import CodeForSessionResponse, TokensResponse, RefreshTokensRequest, SignInResponse, CallbackResponse
+from .dataclasses import CodeForSessionResponse, TokensResponse, RefreshTokensRequest, SignInResponse, CallbackResponse, CreateUserRequest, UserResponse, UpdateUserRequest
 from profiles.utils import get_profile_data
 from core.db_connection import supabase, SUPABASE_KEY, SUPABASE_URL
 from fastapi import HTTPException, Request
@@ -80,6 +80,89 @@ class UsersService:
 
         except AuthApiError as e:
             raise HTTPException(status_code=401, detail=e.message)
+    
+    # NEW METHODS BELOW
+    
+    async def create_user(self, request: CreateUserRequest) -> UserResponse:
+        """Create a new user"""
+        try:
+            user = supabase.auth.admin.create_user({
+                "email": request.email,
+                "password": request.password,
+                "email_confirm": True  # Auto-confirm the email
+            })
+            
+            return UserResponse(
+                id=user.user.id,
+                email=user.user.email,
+                created_at=user.user.created_at
+            )
+            
+        except AuthApiError as e:
+            raise HTTPException(status_code=400, detail=e.message)
+    
+    async def get_user(self, user_id: str) -> UserResponse:
+        """Get user by ID"""
+        try:
+            user = supabase.auth.admin.get_user_by_id(user_id)
+            
+            return UserResponse(
+                id=user.user.id,
+                email=user.user.email,
+                created_at=user.user.created_at
+            )
+            
+        except AuthApiError as e:
+            raise HTTPException(status_code=404, detail="User not found")
+    
+    async def update_user(self, user_id: str, request: UpdateUserRequest) -> UserResponse:
+        """Update user information"""
+        try:
+            # Check if user exists
+            supabase.auth.admin.get_user_by_id(user_id)
+            
+            # Prepare update data
+            update_data = {}
+            if request.email:
+                update_data["email"] = request.email
+            if request.password:
+                update_data["password"] = request.password
+                
+            if not update_data:
+                raise HTTPException(status_code=400, detail="No update data provided")
+                
+            # Update the user
+            user = supabase.auth.admin.update_user_by_id(
+                user_id,
+                update_data
+            )
+            
+            return UserResponse(
+                id=user.user.id,
+                email=user.user.email,
+                created_at=user.user.created_at
+            )
+            
+        except AuthApiError as e:
+            if "not found" in str(e).lower():
+                raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(status_code=400, detail=str(e))
+    
+    async def delete_user(self, user_id: str) -> str:
+        """Delete a user by ID"""
+        try:
+            # Check if user exists
+            supabase.auth.admin.get_user_by_id(user_id)
+            
+            # Delete user
+            supabase.auth.admin.delete_user(user_id)
+            
+            return f"User {user_id} has been deleted"
+            
+        except AuthApiError as e:
+            if "not found" in str(e).lower():
+                raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(status_code=400, detail=str(e))
     
     def _create_client(self) -> Client:
         return create_client(
