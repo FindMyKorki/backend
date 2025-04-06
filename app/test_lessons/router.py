@@ -1,5 +1,5 @@
-from app.test_lessons.service import TestLessonsService
-from app.test_lessons.dataclasses import TestLesson, CreateTestLesson
+from test_lessons.service import TestLessonsService
+from test_lessons.dataclasses import TestLesson, CreateTestLesson
 from fastapi import APIRouter
 
 

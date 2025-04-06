@@ -1,15 +1,15 @@
 from fastapi import APIRouter
 from typing import List
 
-from app.test_lessons.router import test_lessons_router
-from app.users.router import users_router
-from app.profiles.router import profiles_router
-from app.tutors.router import tutors_router
-from app.chats.router import chats_router
-from app.student_reviews.router import student_reviews_router
-from app.issue_reports.router import issue_reports_router
-from app.user_reports.router import user_reports_router
-from app.offer_reports.router import offer_reports_router
+from test_lessons.router import test_lessons_router
+from users.router import users_router
+from profiles.router import profiles_router
+from tutors.router import tutors_router
+from chats.router import chats_router
+from student_reviews.router import student_reviews_router
+from issue_reports.router import issue_reports_router
+from user_reports.router import user_reports_router
+from offer_reports.router import offer_reports_router
 
 
 class Router:
