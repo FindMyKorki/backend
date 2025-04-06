@@ -1,18 +1,23 @@
+import uuid
 from bookings.service import BookingsService
-# from bookings.dataclasses import Level, CreateLevelRequest
+from bookings.dataclasses import BookingResponse, UpdateBookingRequest, ProposeBookingRequest
 
 from fastapi import APIRouter
 
 bookings_router = APIRouter()
 bookings_service = BookingsService()
 
-# @bookings_router.get("/bookings", response_model=list[Level])
-# async def get_levels():
-#     return await levels_service.get_levels()
+@bookings_router.get("/bookings", response_model=list[BookingResponse])
+async def get_bookings(tutor_id: uuid.UUID):
+    return await bookings_service.get_bookings(tutor_id)
 
-# @bookings_router.post("/levels", response_model=str)
-# async def create_level(create_level_data: CreateLevelRequest):
-#     return await levels_service.create_level(create_level_data)
+@bookings_router.put("/bookings/{booking_id}", response_model=str)
+async def update_booking(booking_id: int, booking_data: UpdateBookingRequest):
+    return await bookings_service.update_booking(booking_id, booking_data)
+
+@bookings_router.post("/bookings:propose", response_model=str)
+async def propose_booking(propose_booking_data: ProposeBookingRequest):
+    return await bookings_service.propose_booking(propose_booking_data)
 
 @bookings_router.post("/bookings/{booking_id}:accept", response_model=str)
 async def accept_booking(booking_id: int):
