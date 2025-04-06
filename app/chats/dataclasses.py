@@ -28,7 +28,6 @@ class Chat(BaseModel):
     last_updated_at: datetime
     tutor_id: str
     student_id: str
-    is_archived: Optional[bool] = False
 
     class Config:
         from_attributes = True
