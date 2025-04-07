@@ -8,19 +8,19 @@ tutor_router = APIRouter()
 tutor_service = TutorService()
 
 
-@tutor_router.post('/tutors/{user_id}', response_model=str)
-async def create_tutor_profile(user_id: str, request: CreateTutorProfileRequest) -> str:
+@tutor_router.post('/tutors', response_model=str)
+async def create_tutor_profile(request: CreateTutorProfileRequest, _user_response=Depends(authenticate_user)) -> str:
     """
     Create a new tutor profile for a specific user.
 
     Args:
-        user_id (str): The UUID of the user becoming a tutor.
         request (CreateTutorProfileRequest): Data required to set up the tutor profile (bio, contact_email, phone_number).
+        _user_response (str): UserResponse from authenticate_user().
 
     Returns:
         str: Confirmation message or the ID of the newly created tutor profile.
     """
-    return await tutor_service.create_tutor_profile(user_id, request)
+    return await tutor_service.create_tutor_profile(request, _user_response.user.id)
 
 
 @tutor_router.get('/tutors/{tutor_id}', response_model=TutorResponse)

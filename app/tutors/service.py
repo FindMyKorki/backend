@@ -6,7 +6,10 @@ from .utils import get_tutor_profile_data
 
 
 class TutorService:
-    async def create_tutor_profile(self, user_id: str, request: CreateTutorProfileRequest) -> str:
+    async def create_tutor_profile(self, request: CreateTutorProfileRequest, user_id: str) -> str:
+        if user_id is None:
+            raise HTTPException(401, 'Unauthorized action')
+
         tutor_profile = await get_tutor_profile_data(user_id)
 
         if tutor_profile:
@@ -17,6 +20,7 @@ class TutorService:
             .insert({
                 'id': user_id,
                 'bio': request.bio,
+                'bio_long': request.bio_long,
                 'rating': 0,  # Domyślna wartość oceny
                 'contact_email': request.contact_email,
                 'phone_number': request.phone_number,

@@ -4,6 +4,7 @@ from typing import Optional
 
 class CreateTutorProfileRequest(BaseModel):
     bio: str
+    bio_long: str
     contact_email: Optional[EmailStr] = None
     phone_number: Optional[str] = None
 

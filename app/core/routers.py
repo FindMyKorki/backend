@@ -22,7 +22,6 @@ registered_routers: List[Router] = [
     Router(router=profiles_router, tag="Profiles"),
     Router(router=tutor_router, tag="Tutors"),
     Router(router=offers_router, tag="Offers"),
-    Router(router=offers_router, tag="Offers"),
     Router(router=reviews_router, tag="Reviews"),
     Router(router=availabilities_router, tag="(Un)availabilities"),
 ]
