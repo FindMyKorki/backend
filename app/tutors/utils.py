@@ -24,6 +24,7 @@ def flatten_tutor_data(tutor_data: dict):
     return {
         "id": tutor_data["id"],
         "bio": tutor_data["bio"],
+        "bio_long": tutor_data.get("bio_long"),
         "rating": tutor_data["rating"],
         "contact_email": tutor_data.get("contact_email"),
         "phone_number": tutor_data.get("phone_number"),

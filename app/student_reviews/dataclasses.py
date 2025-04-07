@@ -16,7 +16,6 @@ class StudentReview(BaseModel):
 
 
 class CreateStudentReview(BaseModel):
-    rating: float
     comment: Optional[str] = None
 
     class Config:

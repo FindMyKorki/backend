@@ -44,6 +44,7 @@ class CallbackResponse(BaseModel):
 class CreateUserRequest(BaseModel):
     email: EmailStr
     password: str
+    avatar_url: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -53,6 +54,7 @@ class UserResponse(BaseModel):
     id: str
     email: str
     created_at: str
+    avatar_url: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -61,6 +63,7 @@ class UserResponse(BaseModel):
 class UpdateUserRequest(BaseModel):
     email: Optional[EmailStr] = None
     password: Optional[str] = None
+    avatar_url: Optional[str] = None
 
     class Config:
         from_attributes = True

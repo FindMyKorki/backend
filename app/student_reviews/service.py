@@ -1,12 +1,11 @@
 from core.db_connection import supabase
 from fastapi import HTTPException
-from .dataclasses import StudentReview, CreateStudentReview
+from .dataclasses import StudentReview
 
 
 class StudentReviewsService:
     async def get_student_reviews(self, student_id: str) -> list[StudentReview]:
         """Get all reviews for a student"""
-        # Verify the student exists
         try:
             student = supabase.auth.admin.get_user_by_id(student_id).user
         except:

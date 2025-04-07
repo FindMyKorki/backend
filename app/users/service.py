@@ -81,21 +81,40 @@ class UsersService:
         except AuthApiError as e:
             raise HTTPException(status_code=401, detail=e.message)
     
-    # NEW METHODS BELOW
-    
     async def create_user(self, request: CreateUserRequest) -> UserResponse:
         """Create a new user"""
         try:
+            # Create user auth record
             user = supabase.auth.admin.create_user({
                 "email": request.email,
                 "password": request.password,
                 "email_confirm": True  # Auto-confirm the email
             })
             
+            user_id = user.user.id
+            
+            # If avatar_url is provided, create/update profile record
+            if request.avatar_url:
+                # Check if profile exists first
+                profile_data = await get_profile_data(user_id)
+                
+                if profile_data:
+                    # Update existing profile
+                    supabase.table("profiles").update({
+                        "avatar_url": request.avatar_url
+                    }).eq("id", user_id).execute()
+                else:
+                    # Create new profile
+                    supabase.table("profiles").insert({
+                        "id": user_id,
+                        "avatar_url": request.avatar_url
+                    }).execute()
+            
             return UserResponse(
                 id=user.user.id,
                 email=user.user.email,
-                created_at=user.user.created_at
+                created_at=user.user.created_at,
+                avatar_url=request.avatar_url
             )
             
         except AuthApiError as e:
@@ -106,10 +125,15 @@ class UsersService:
         try:
             user = supabase.auth.admin.get_user_by_id(user_id)
             
+            # Get profile data to fetch avatar_url
+            profile = await get_profile_data(user_id)
+            avatar_url = profile.avatar_url if profile else None
+            
             return UserResponse(
                 id=user.user.id,
                 email=user.user.email,
-                created_at=user.user.created_at
+                created_at=user.user.created_at,
+                avatar_url=avatar_url
             )
             
         except AuthApiError as e:
@@ -119,28 +143,52 @@ class UsersService:
         """Update user information"""
         try:
             # Check if user exists
-            supabase.auth.admin.get_user_by_id(user_id)
+            user = supabase.auth.admin.get_user_by_id(user_id)
             
-            # Prepare update data
-            update_data = {}
+            # Prepare auth update data
+            auth_update_data = {}
             if request.email:
-                update_data["email"] = request.email
+                auth_update_data["email"] = request.email
             if request.password:
-                update_data["password"] = request.password
+                auth_update_data["password"] = request.password
                 
-            if not update_data:
-                raise HTTPException(status_code=400, detail="No update data provided")
+            # Update the auth user if needed
+            if auth_update_data:
+                user = supabase.auth.admin.update_user_by_id(
+                    user_id,
+                    auth_update_data
+                )
                 
-            # Update the user
-            user = supabase.auth.admin.update_user_by_id(
-                user_id,
-                update_data
-            )
+            # Update avatar if provided
+            avatar_url = None
+            if request.avatar_url:
+                # Check if profile exists
+                profile_data = await get_profile_data(user_id)
+                
+                if profile_data:
+                    # Update existing profile
+                    supabase.table("profiles").update({
+                        "avatar_url": request.avatar_url
+                    }).eq("id", user_id).execute()
+                else:
+                    # Create new profile
+                    supabase.table("profiles").insert({
+                        "id": user_id,
+                        "avatar_url": request.avatar_url
+                    }).execute()
+                
+                avatar_url = request.avatar_url
+            else:
+                # Get current avatar_url
+                profile = await get_profile_data(user_id)
+                if profile:
+                    avatar_url = profile.avatar_url
             
             return UserResponse(
                 id=user.user.id,
                 email=user.user.email,
-                created_at=user.user.created_at
+                created_at=user.user.created_at,
+                avatar_url=avatar_url
             )
             
         except AuthApiError as e:

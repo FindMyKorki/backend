@@ -39,12 +39,14 @@ async def get_user(user_id: str):
     """Get a user by ID"""
     return await users_service.get_user(user_id)
 
-@users_router.put('/users/{user_id}', response_model=UserResponse)
-async def update_user(user_id: str, request: UpdateUserRequest, user_response=Depends(authenticate_user)):
-    """Update a user's information"""
+@users_router.put('/users/profile', response_model=UserResponse)
+async def update_user(request: UpdateUserRequest, user_response=Depends(authenticate_user)):
+    """Update the current user's information"""
+    user_id = user_response.user.id
     return await users_service.update_user(user_id, request)
 
-@users_router.post('/users/{user_id}:delete', response_model=str)
-async def delete_user(user_id: str, user_response=Depends(authenticate_user)):
-    """Delete a user"""
+@users_router.post('/users/delete', response_model=str)
+async def delete_user(user_response=Depends(authenticate_user)):
+    """Delete the current user"""
+    user_id = user_response.user.id
     return await users_service.delete_user(user_id)

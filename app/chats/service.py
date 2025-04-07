@@ -1,62 +1,84 @@
 from fastapi import HTTPException
 from core.db_connection import supabase
-from .dataclasses import Chat, Message, MessageResponse, ChatReportRequest
+from .dataclasses import ChatWithLastMessage, MessageResponse
 
 
 class ChatsService:
-    async def get_tutor_chats(self, tutor_id: str) -> list[Chat]:
-        """Get all chats for a tutor"""
-        chats = (
-            supabase.table("chats")
-            .select("*")
-            .eq("tutor_id", tutor_id)
-            .execute()
-        )
+    async def get_tutor_chats(self, tutor_id: str) -> list[ChatWithLastMessage]:
+        """Get all chats for tutor with last messages"""
+        chats = supabase.table("chats")\
+                       .select("*")\
+                       .eq("tutor_id", tutor_id)\
+                       .execute()
         
         if not chats.data:
             return []
             
-        return chats.data
+        return await self._enrich_chats_with_last_message(chats.data)
     
-    async def get_student_chats(self, student_id: str) -> list[Chat]:
-        """Get all chats for a student"""
-        chats = (
-            supabase.table("chats")
-            .select("*")
-            .eq("student_id", student_id)
-            .execute()
-        )
+    async def get_student_chats(self, student_id: str) -> list[ChatWithLastMessage]:
+        """Get all chats for student with last messages"""
+        chats = supabase.table("chats")\
+                       .select("*")\
+                       .eq("student_id", student_id)\
+                       .execute()
         
         if not chats.data:
             return []
             
-        return chats.data
+        return await self._enrich_chats_with_last_message(chats.data)
+    
+    async def _enrich_chats_with_last_message(self, chats: list) -> list[ChatWithLastMessage]:
+        """Add last message to each chat"""
+        enriched_chats = []
+        
+        for chat in chats:
+            last_message = supabase.table("messages")\
+                                  .select("*")\
+                                  .eq("chat_id", chat["id"])\
+                                  .order("created_at", desc=True)\
+                                  .limit(1)\
+                                  .execute()
+            
+            enriched_chats.append({
+                **chat,
+                "last_message": last_message.data[0] if last_message.data else None
+            })
+            
+        return enriched_chats
+    
+    async def get_chat_messages(self, chat_id: int) -> MessageResponse:
+        """Get all messages for specific chat"""
+        messages = supabase.table("messages")\
+                          .select("*")\
+                          .eq("chat_id", chat_id)\
+                          .order("created_at")\
+                          .execute()
+        
+        return MessageResponse(messages=messages.data or [])
     
     async def report_chat(self, chat_id: int, user_id: str, request: ChatReportRequest) -> str:
-        """Report a chat"""
-        chat = (
-            supabase.table("chats")
-            .select("*")
-            .eq("id", chat_id)
-            .execute()
-        )
+        """Report a chat conversation"""
+        chat = supabase.table("chats")\
+                      .select("*")\
+                      .eq("id", chat_id)\
+                      .execute()
         
-        if not chat.data or len(chat.data) == 0:
+        if not chat.data:
             raise HTTPException(status_code=404, detail="Chat not found")
         
-        # Since we can't directly report a chat (only users), we'll report the other participant
-        # Get the chat data to determine who to report
         chat_data = chat.data[0]
+        reported_user_id = (
+            chat_data["student_id"] 
+            if user_id == chat_data["tutor_id"] 
+            else chat_data["tutor_id"]
+        )
         
-        # Determine which user to report (the one that's not the reporter)
-        reported_user_id = chat_data["student_id"] if user_id == chat_data["tutor_id"] else chat_data["tutor_id"]
-        
-        # Create a user report
         report_data = {
             "user_id": user_id,
             "reported_user_id": reported_user_id,
             "reason": request.reason,
-            "message": request.message
+            "message": f"Chat Report (ID: {chat_id}): {request.message}"
         }
         
         result = supabase.table("user_reports").insert(report_data).execute()
@@ -64,26 +86,4 @@ class ChatsService:
         if not result.data:
             raise HTTPException(status_code=500, detail="Failed to create report")
         
-        return f"Chat {chat_id} participant has been reported"
-    
-    async def get_chat_messages(self, chat_id: int) -> MessageResponse:
-        """Get all messages for a chat"""
-        chat = (
-            supabase.table("chats")
-            .select("*")
-            .eq("id", chat_id)
-            .execute()
-        )
-        
-        if not chat.data or len(chat.data) == 0:
-            raise HTTPException(status_code=404, detail="Chat not found")
-        
-        messages = (
-            supabase.table("messages")
-            .select("*")
-            .eq("chat_id", chat_id)
-            .order("created_at", desc=False)
-            .execute()
-        )
-        
-        return MessageResponse(messages=messages.data or [])
+        return "Chat successfully reported"

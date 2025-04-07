@@ -5,6 +5,7 @@ from typing import Optional
 class TutorProfile(BaseModel):
     id: str
     bio: str
+    bio_long: Optional[str] = None
     rating: float
     contact_email: Optional[EmailStr] = None
     phone_number: Optional[str] = None
@@ -18,6 +19,7 @@ class TutorProfile(BaseModel):
 
 class UpdateTutorProfile(BaseModel):
     bio: Optional[str] = None
+    bio_long: Optional[str] = None
     contact_email: Optional[EmailStr] = None
     phone_number: Optional[str] = None
 

@@ -10,6 +10,7 @@ class Message(BaseModel):
     sender_id: str
     content: str
     is_read: bool
+    is_message: bool
 
     class Config:
         from_attributes = True
@@ -28,6 +29,13 @@ class Chat(BaseModel):
     last_updated_at: datetime
     tutor_id: str
     student_id: str
+
+    class Config:
+        from_attributes = True
+
+
+class ChatWithLastMessage(Chat):
+    last_message: Optional[Message] = None
 
     class Config:
         from_attributes = True

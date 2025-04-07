@@ -17,6 +17,8 @@ class TutorsService:
         update_data = {}
         if request.bio is not None:
             update_data["bio"] = request.bio
+        if request.bio_long is not None:
+            update_data["bio_long"] = request.bio_long
         if request.contact_email is not None:
             update_data["contact_email"] = request.contact_email
         if request.phone_number is not None:
