@@ -20,7 +20,7 @@ class IssueReportsService:
         return IssueReport.model_validate(issue_report)
 
     async def update_issue_report(self, user_id, issue_report: UpdateIssueReportRequest) -> IssueReport:
-        updated_issue_report = await crud_provider.update(issue_report.model_dump(exclude='id'), issue_report.id, user_id)
+        updated_issue_report = await crud_provider.update(issue_report.model_dump(), None, user_id)
 
         return IssueReport.model_validate(updated_issue_report)
 

@@ -6,7 +6,7 @@ crud_provider = CRUDProvider('profiles')
 
 
 class ProfilesService:
-    async def create_profile(self, profile: UpsertProfile, user_id: str) -> Profile:
+    async def create_profile(self, user_id: str, profile: UpsertProfile) -> Profile:
         new_profile = await crud_provider.create(profile.model_dump(), user_id)
 
         return Profile.model_validate(new_profile)

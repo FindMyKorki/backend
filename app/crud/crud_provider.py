@@ -1,5 +1,6 @@
 from core.db_connection import supabase
 from postgrest import SyncQueryRequestBuilder
+from fastapi import HTTPException
 
 
 class CRUDException(Exception):
@@ -55,9 +56,9 @@ class CRUDProvider:
 
     async def update(self, data: dict, id: str | int = None, owner_id: str = None) -> dict:
         if not id:
-            if not "id" in data.keys():
+            if not 'id' in data.keys():
                 raise CRUDException('No id provided')
-            id = data["id"]
+            id = data['id']
 
         query = (
             supabase.table(self.table_name)
@@ -92,12 +93,12 @@ class CRUDProvider:
             response = query.execute()
 
         except Exception as e:
-            raise CRUDException(f'Error while executing query: {e}')
-        
+            raise HTTPException(500, f'Error while executing query: {e.message}')
+
         if not response.data:
-            raise CRUDException(f'No response from query')
+            raise HTTPException(502, f'No response from query')
 
         if len(response.data) == 0:
-            raise CRUDException(f'Table {self.table_name} has not been affected by the query')
+            raise HTTPException(404, f'Table {self.table_name} has not been affected by the query')
 
         return response.data
