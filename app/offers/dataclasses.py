@@ -27,7 +27,7 @@ class UpdateOfferRequest(BaseModel):
     level_id: int
 
 
-class TutorOfferResponse(BaseModel):
+class TutorOfferResponse(OfferInterface):
     is_active: bool
 
 
