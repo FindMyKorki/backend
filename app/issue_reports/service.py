@@ -7,7 +7,7 @@ crud_provider = CRUDProvider('issue_reports', 'user_id')
 
 class IssueReportsService:
     async def create_issue_report(self, user_id: str, issue_report: CreateIssueReportRequest) -> IssueReport:
-        issue_report = issue_report.model_dump(exclude='id')
+        issue_report = issue_report.model_dump()
         issue_report['user_id'] = user_id
 
         new_issue_report = await crud_provider.create(issue_report)

@@ -7,7 +7,7 @@ crud_provider = CRUDProvider('user_reports', 'user_id')
 
 class UserReportsService:
     async def create_user_report(self, user_id: str, user_report: CreateUserReportRequest) -> UserReport:
-        user_report = user_report.model_dump(exclude='id')
+        user_report = user_report.model_dump()
         user_report['user_id'] = user_id
 
         new_user_report = await crud_provider.create(user_report)
