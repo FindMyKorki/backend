@@ -1,10 +1,11 @@
 from pydantic import BaseModel
 from typing import Optional
+from profiles.dataclasses import Profile
 
 
 class UserReport(BaseModel):
     id: int
-    reported_user_id: str
+    reported_user: Profile
     reason: str
     message: Optional[str]
 
