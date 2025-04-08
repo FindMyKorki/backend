@@ -29,11 +29,6 @@ async def refresh_tokens(request: RefreshTokensRequest):
 
 # New endpoints below
 
-@users_router.post('/users', response_model=UserResponse)
-async def create_user(request: CreateUserRequest):
-    """Create a new user"""
-    return await users_service.create_user(request)
-
 @users_router.get('/users/{user_id}', response_model=UserResponse)
 async def get_user(user_id: str):
     """Get a user by ID"""

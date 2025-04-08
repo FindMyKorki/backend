@@ -14,7 +14,6 @@ class OfferReportsService:
         tutor_id = offer.data[0]["tutor_id"]
         
         report_data = {
-            "created_at": datetime.now().isoformat(),
             "user_id": user_id,  
             "reported_user_id": tutor_id,  
             "reason": "offer related",  

@@ -11,21 +11,17 @@ chats_router = APIRouter(
 chats_service = ChatsService()
 
 
-@chats_router.get("/tutor/{tutor_id}", response_model=list[ChatWithLastMessage])
-async def get_tutor_chats(
-    tutor_id: str, 
-    user_response=Depends(authenticate_user)
-):
+@chats_router.get("/tutor", response_model=list[ChatWithLastMessage])
+async def get_tutor_chats(user_response=Depends(authenticate_user)):
     """Get all chats for tutor with last messages"""
+    tutor_id = user_response.profile.id
     return await chats_service.get_tutor_chats(tutor_id)
 
 
-@chats_router.get("/student/{student_id}", response_model=list[ChatWithLastMessage])
-async def get_student_chats(
-    student_id: str, 
-    user_response=Depends(authenticate_user)
-):
+@chats_router.get("/student", response_model=list[ChatWithLastMessage])
+async def get_student_chats(user_response=Depends(authenticate_user)):
     """Get all chats for student with last messages"""
+    student_id = user_response.profile.id
     return await chats_service.get_student_chats(student_id)
 
 

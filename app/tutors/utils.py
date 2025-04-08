@@ -6,7 +6,7 @@ async def get_tutor_profile_data(tutor_id: str):
     """Get tutor profile data from the database"""
     tutor = (
         supabase.table('tutor_profiles')
-        .select("*, profiles(full_name, avatar_url)")
+        .select("*, profiles(full_name, avatar_url), reviews(id, student_id, tutor_id, rating, comment, created_at)")
         .eq("id", tutor_id)
         .execute()
     )
@@ -20,7 +20,8 @@ async def get_tutor_profile_data(tutor_id: str):
 def flatten_tutor_data(tutor_data: dict):
     """Transform nested tutor profile data into a flat structure"""
     profile = tutor_data.get("profiles", {}) or {}
-    
+    featured_review = tutor_data.get("reviews", {}) or {}
+
     return {
         "id": tutor_data["id"],
         "bio": tutor_data["bio"],
@@ -28,7 +29,14 @@ def flatten_tutor_data(tutor_data: dict):
         "rating": tutor_data["rating"],
         "contact_email": tutor_data.get("contact_email"),
         "phone_number": tutor_data.get("phone_number"),
-        "featured_review_id": tutor_data.get("featured_review_id"),
+        "featured_review": {
+            "id": featured_review.get("id"),
+            "student_id": featured_review.get("student_id"),
+            "tutor_id": featured_review.get("tutor_id"),
+            "rating": featured_review.get("rating"),
+            "comment": featured_review.get("comment"),
+            "created_at": featured_review.get("created_at"),
+        } if featured_review else None,
         "full_name": profile.get("full_name"),
         "avatar_url": profile.get("avatar_url"),
     }

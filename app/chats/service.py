@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from core.db_connection import supabase
-from .dataclasses import ChatWithLastMessage, MessageResponse
+from .dataclasses import ChatWithLastMessage, MessageResponse, ChatReportRequest
 
 
 class ChatsService:

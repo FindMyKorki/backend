@@ -13,7 +13,7 @@ class TokensResponse(BaseModel):
 
 class CodeForSessionResponse(BaseModel):
     tokens: TokensResponse
-    profile: Profile
+    profile: Optional[Profile] = None
 
     class Config:
         from_attributes = True
@@ -41,15 +41,6 @@ class CallbackResponse(BaseModel):
         from_attributes = True
 
 
-class CreateUserRequest(BaseModel):
-    email: EmailStr
-    password: str
-    avatar_url: Optional[str] = None
-
-    class Config:
-        from_attributes = True
-
-
 class UserResponse(BaseModel):
     id: str
     email: str
@@ -61,8 +52,8 @@ class UserResponse(BaseModel):
 
 
 class UpdateUserRequest(BaseModel):
-    email: Optional[EmailStr] = None
-    password: Optional[str] = None
+    full_name: Optional[str] = None
+    is_tutor: Optional[bool] = None
     avatar_url: Optional[str] = None
 
     class Config:

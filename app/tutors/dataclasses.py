@@ -2,6 +2,15 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 
 
+class FeaturedReview(BaseModel):
+    id: int
+    student_id: str
+    tutor_id: str
+    rating: int
+    comment: str
+    created_at: str
+
+
 class TutorProfile(BaseModel):
     id: str
     bio: str
@@ -9,7 +18,7 @@ class TutorProfile(BaseModel):
     rating: float
     contact_email: Optional[EmailStr] = None
     phone_number: Optional[str] = None
-    featured_review_id: Optional[int] = None
+    featured_review: Optional[FeaturedReview] = None
     avatar_url: Optional[str] = None
     full_name: Optional[str] = None
 

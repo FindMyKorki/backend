@@ -144,27 +144,13 @@ class UsersService:
         try:
             # Check if user exists
             user = supabase.auth.admin.get_user_by_id(user_id)
-            
-            # Prepare auth update data
-            auth_update_data = {}
-            if request.email:
-                auth_update_data["email"] = request.email
-            if request.password:
-                auth_update_data["password"] = request.password
-                
-            # Update the auth user if needed
-            if auth_update_data:
-                user = supabase.auth.admin.update_user_by_id(
-                    user_id,
-                    auth_update_data
-                )
-                
-            # Update avatar if provided
+
+            # Do not update auth.users records
             avatar_url = None
             if request.avatar_url:
                 # Check if profile exists
                 profile_data = await get_profile_data(user_id)
-                
+
                 if profile_data:
                     # Update existing profile
                     supabase.table("profiles").update({
@@ -176,21 +162,21 @@ class UsersService:
                         "id": user_id,
                         "avatar_url": request.avatar_url
                     }).execute()
-                
+
                 avatar_url = request.avatar_url
             else:
                 # Get current avatar_url
                 profile = await get_profile_data(user_id)
                 if profile:
                     avatar_url = profile.avatar_url
-            
+
             return UserResponse(
                 id=user.user.id,
                 email=user.user.email,
                 created_at=user.user.created_at,
                 avatar_url=avatar_url
             )
-            
+
         except AuthApiError as e:
             if "not found" in str(e).lower():
                 raise HTTPException(status_code=404, detail="User not found")
