@@ -1,4 +1,4 @@
-from .dataclasses import CodeForSessionResponse, TokensResponse, RefreshTokensRequest, SignInResponse, CallbackResponse
+from .dataclasses import CodeForSessionResponse, TokensResponse, RefreshTokensRequest, SignInResponse, CallbackResponse, CreateUserRequest, UserResponse, UpdateUserRequest
 from profiles.utils import get_profile_data
 from core.db_connection import supabase, SUPABASE_KEY, SUPABASE_URL
 from fastapi import HTTPException, Request
@@ -20,7 +20,7 @@ class UsersService:
             
             return SignInResponse(
                 code_verifier=code_verifier, 
-                oauth_repsponse=response
+                oauth_response=response
                 )
             
         raise HTTPException(status_code=404, detail='Provider not found')
@@ -80,6 +80,123 @@ class UsersService:
 
         except AuthApiError as e:
             raise HTTPException(status_code=401, detail=e.message)
+    
+    async def create_user(self, request: CreateUserRequest) -> UserResponse:
+        """Create a new user"""
+        try:
+            # Create user auth record
+            user = supabase.auth.admin.create_user({
+                "email": request.email,
+                "password": request.password,
+                "email_confirm": True  # Auto-confirm the email
+            })
+            
+            user_id = user.user.id
+            
+            # If avatar_url is provided, create/update profile record
+            if request.avatar_url:
+                # Check if profile exists first
+                profile_data = await get_profile_data(user_id)
+                
+                if profile_data:
+                    # Update existing profile
+                    supabase.table("profiles").update({
+                        "avatar_url": request.avatar_url
+                    }).eq("id", user_id).execute()
+                else:
+                    # Create new profile
+                    supabase.table("profiles").insert({
+                        "id": user_id,
+                        "avatar_url": request.avatar_url
+                    }).execute()
+            
+            return UserResponse(
+                id=user.user.id,
+                email=user.user.email,
+                created_at=user.user.created_at,
+                avatar_url=request.avatar_url
+            )
+            
+        except AuthApiError as e:
+            raise HTTPException(status_code=400, detail=e.message)
+    
+    async def get_user(self, user_id: str) -> UserResponse:
+        """Get user by ID"""
+        try:
+            user = supabase.auth.admin.get_user_by_id(user_id)
+            
+            # Get profile data to fetch avatar_url
+            profile = await get_profile_data(user_id)
+            avatar_url = profile.avatar_url if profile else None
+            
+            return UserResponse(
+                id=user.user.id,
+                email=user.user.email,
+                created_at=user.user.created_at,
+                avatar_url=avatar_url
+            )
+            
+        except AuthApiError as e:
+            raise HTTPException(status_code=404, detail="User not found")
+    
+    async def update_user(self, user_id: str, request: UpdateUserRequest) -> UserResponse:
+        """Update user information"""
+        try:
+            # Check if user exists
+            user = supabase.auth.admin.get_user_by_id(user_id)
+
+            # Do not update auth.users records
+            avatar_url = None
+            if request.avatar_url:
+                # Check if profile exists
+                profile_data = await get_profile_data(user_id)
+
+                if profile_data:
+                    # Update existing profile
+                    supabase.table("profiles").update({
+                        "avatar_url": request.avatar_url
+                    }).eq("id", user_id).execute()
+                else:
+                    # Create new profile
+                    supabase.table("profiles").insert({
+                        "id": user_id,
+                        "avatar_url": request.avatar_url
+                    }).execute()
+
+                avatar_url = request.avatar_url
+            else:
+                # Get current avatar_url
+                profile = await get_profile_data(user_id)
+                if profile:
+                    avatar_url = profile.avatar_url
+
+            return UserResponse(
+                id=user.user.id,
+                email=user.user.email,
+                created_at=user.user.created_at,
+                avatar_url=avatar_url
+            )
+
+        except AuthApiError as e:
+            if "not found" in str(e).lower():
+                raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(status_code=400, detail=str(e))
+    
+    async def delete_user(self, user_id: str) -> str:
+        """Delete a user by ID"""
+        try:
+            # Check if user exists
+            supabase.auth.admin.get_user_by_id(user_id)
+            
+            # Delete user
+            supabase.auth.admin.delete_user(user_id)
+            
+            return f"User {user_id} has been deleted"
+            
+        except AuthApiError as e:
+            if "not found" in str(e).lower():
+                raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(status_code=400, detail=str(e))
     
     def _create_client(self) -> Client:
         return create_client(
