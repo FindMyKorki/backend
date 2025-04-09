@@ -58,3 +58,8 @@ class UpdateUserRequest(BaseModel):
 
     class Config:
         from_attributes = True
+        
+class CreateUserRequest(BaseModel):
+    email: EmailStr
+    password: str
+    avatar_url: Optional[str] = None
