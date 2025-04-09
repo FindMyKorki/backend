@@ -17,7 +17,6 @@ class Router:
         self.router = router
         self.tag = tag
 
-
 # Add routers here
 registered_routers: List[Router] = [
     Router(router=test_lessons_router, tag="Test Lessons"),

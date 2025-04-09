@@ -1,10 +1,9 @@
 from bookings.dataclasses import BookingResponse, ProposeBooking, ProposeBookingRequest, UpdateBooking, UpdateBookingRequest
 import uuid
 from fastapi import HTTPException
-from bookings.dataclasses import BookingResponse
 from core.db_connection import supabase
 
-def check_is_booking_exists(booking_id: int) -> None | HTTPException:
+def check_if_booking_exists(booking_id: int) -> None | HTTPException:
     booking = supabase.table("bookings").select("*").eq("id", booking_id).execute()
     if not booking.data:
         raise HTTPException(404, 'Booking not found')
@@ -19,29 +18,19 @@ def update_booking_is_paid(booking_id: int, is_paid: bool) -> str:
 
 class BookingsService:
     async def get_bookings(self, tutor_id: uuid.UUID) -> list[BookingResponse]:
-        offers_by_tutor = supabase.table("offers").select("*").eq("tutor_id", tutor_id).execute()
+        bookings_by_tutor = supabase.rpc('get_bookings_by_tutor', {
+            'tutor_uuid': str(tutor_id)
+        }).execute()
 
-        if not offers_by_tutor.data:
-            raise HTTPException(404, 'No bookings found')
-        
-        bookings_by_tutor = []
+        for booking in bookings_by_tutor.data:
+            booking['start_date'] = booking['start_date'].isoformat()
+            booking['end_date'] = booking['end_date'].isoformat()
+            booking['created_at'] = booking['created_at'].isoformat()
+            booking['student_id'] = str(booking['student_id'])
 
-        for offer in offers_by_tutor.data:
-            bookings = supabase.table("bookings").select("*").eq("offer_id", offer["id"]).execute()
-
-            if not bookings.data:
-                raise HTTPException(404, 'No bookings found')
-            
-            for booking in bookings.data:
-                b_subject = supabase.table("subjects").select("name").eq("id", offer["subject_id"]).execute().data[0]["name"]
-                b_student_full_name = supabase.table("profiles").select("full_name").eq("id", booking["student_id"]).execute().data[0]["full_name"]
-                booking = BookingResponse(**booking, subject=b_subject, student_full_name=b_student_full_name)
-
-                bookings_by_tutor.append(booking)
-
-        return bookings_by_tutor
+        return bookings_by_tutor.data
     
-    async def propose_booking(self, booking_data: ProposeBookingRequest) -> str:
+    async def propose_booking(self, booking_data: ProposeBookingRequest, student_id: uuid.UUID) -> str:
         start_date = booking_data.start_date.isoformat()
         end_date = booking_data.end_date.isoformat()
 
@@ -50,7 +39,7 @@ class BookingsService:
         
         new_booking = ProposeBooking(
             offer_id=booking_data.offer_id, 
-            student_id=str(booking_data.student_id), 
+            student_id=str(student_id), 
             start_date=start_date,
             end_date=end_date,
             notes=booking_data.notes)
@@ -62,7 +51,7 @@ class BookingsService:
         return 'Booking proposed successfully'
 
     async def update_booking(self, booking_id: int, update_booking_data: UpdateBookingRequest) -> str:
-        check_is_booking_exists(booking_id)
+        check_if_booking_exists(booking_id)
         end_date = update_booking_data.end_date.isoformat()
         start_date = update_booking_data.start_date.isoformat()
         if end_date < start_date:
@@ -77,21 +66,21 @@ class BookingsService:
         return 'Booking updated successfully'
 
     async def accept_booking(self, booking_id: int) -> str:
-        check_is_booking_exists(booking_id)
+        check_if_booking_exists(booking_id)
         return update_booking_status(booking_id, "accepted")
     
     async def reject_booking(self, booking_id: int) -> str:
-        check_is_booking_exists(booking_id)
+        check_if_booking_exists(booking_id)
         return update_booking_status(booking_id, "rejected")
     
     async def cancel_booking(self, booking_id: int) -> str:
-        check_is_booking_exists(booking_id)
+        check_if_booking_exists(booking_id)
         return update_booking_status(booking_id, "canceled")
     
     async def mark_booking_paid(self, booking_id: int) -> str:
-        check_is_booking_exists(booking_id)
+        check_if_booking_exists(booking_id)
         return update_booking_is_paid(booking_id, True)
 
     async def mark_booking_unpaid(self, booking_id: int) -> str:
-        check_is_booking_exists(booking_id)
+        check_if_booking_exists(booking_id)
         return update_booking_is_paid(booking_id, False)

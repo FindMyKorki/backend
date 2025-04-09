@@ -22,6 +22,7 @@ class BookingResponse(BaseModel):
     subject: str
     student_id: uuid.UUID
     student_full_name: str
+    avatar_url: str
     start_date: datetime
     end_date: datetime
     created_at: datetime
@@ -34,7 +35,6 @@ class BookingResponse(BaseModel):
 
 class ProposeBookingRequest(BaseModel):
     offer_id: int
-    student_id: uuid.UUID
     start_date: datetime
     end_date: datetime
     notes: Optional[str]
