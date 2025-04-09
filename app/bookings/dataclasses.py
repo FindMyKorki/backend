@@ -17,7 +17,7 @@ class Booking(BaseModel):
     class Config:
         from_attributes = True
 
-class BookingResponse(BaseModel):
+class TutorBookingResponse(BaseModel):
     id: int
     subject: str
     student_id: uuid.UUID
@@ -28,6 +28,23 @@ class BookingResponse(BaseModel):
     created_at: datetime
     status: str
     is_paid: bool
+    notes: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+class StudentBookingResponse(BaseModel):
+    id: int
+    subject: str
+    tutor_id: uuid.UUID
+    tutor_full_name: str
+    avatar_url: str
+    start_date: datetime
+    end_date: datetime
+    created_at: datetime
+    status: str
+    is_paid: bool
+    price: float
     notes: Optional[str]
 
     class Config:

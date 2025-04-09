@@ -1,4 +1,4 @@
-from bookings.dataclasses import BookingResponse, ProposeBooking, ProposeBookingRequest, UpdateBooking, UpdateBookingRequest
+from bookings.dataclasses import TutorBookingResponse, StudentBookingResponse, ProposeBooking, ProposeBookingRequest, UpdateBooking, UpdateBookingRequest
 import uuid
 from fastapi import HTTPException
 from core.db_connection import supabase
@@ -17,18 +17,19 @@ def update_booking_is_paid(booking_id: int, is_paid: bool) -> str:
     return f"Booking marked as {'paid' if is_paid else 'unpaid'} successfully"
 
 class BookingsService:
-    async def get_bookings(self, tutor_id: uuid.UUID) -> list[BookingResponse]:
+    async def get_bookings_by_tutor(self, tutor_id: uuid.UUID) -> list[TutorBookingResponse]:
         bookings_by_tutor = supabase.rpc('get_bookings_by_tutor', {
             'tutor_uuid': str(tutor_id)
         }).execute()
 
-        for booking in bookings_by_tutor.data:
-            booking['start_date'] = booking['start_date'].isoformat()
-            booking['end_date'] = booking['end_date'].isoformat()
-            booking['created_at'] = booking['created_at'].isoformat()
-            booking['student_id'] = str(booking['student_id'])
-
         return bookings_by_tutor.data
+    
+    async def get_bookings_by_student(self, student_id: uuid.UUID) -> list[StudentBookingResponse]:
+        bookings_by_student = supabase.rpc('get_bookings_by_student', {
+            'student_uuid': str(student_id)
+        }).execute()
+
+        return bookings_by_student.data
     
     async def propose_booking(self, booking_data: ProposeBookingRequest, student_id: uuid.UUID) -> str:
         start_date = booking_data.start_date.isoformat()
