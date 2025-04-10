@@ -1,7 +1,10 @@
+import os
+
 from .dataclasses import CodeForSessionResponse, TokensResponse, RefreshTokensRequest, SignInResponse, CallbackResponse
 from profiles.utils import get_profile_data
 from core.db_connection import supabase, SUPABASE_KEY, SUPABASE_URL
 from fastapi import HTTPException, Request
+from fastapi.responses import RedirectResponse
 from supabase import AuthApiError, create_client, Client
 
 
@@ -64,8 +67,12 @@ class UsersService:
     
     async def auth_callback(self, request: Request) -> CallbackResponse:   
         code = request.query_params.get('code')
-
-        return CallbackResponse(code=code)
+        frontend_url = os.getenv("FRONTEND_URL")
+        if frontend_url:
+            url = os.getenv("FRONTEND_URL") + "?code=" + code
+            return RedirectResponse(url)
+        else:
+            return CallbackResponse(code=code)
 
     async def refresh_tokens(self, request: RefreshTokensRequest) -> TokensResponse:
         tokens_client = self._create_client()

@@ -8,8 +8,8 @@ users_router = APIRouter()
 users_service = UsersService()
 
 @users_router.get('/auth/sign-in/{provider}', response_model=SignInResponse)
-async def sign_in(provider: str):
-    return await users_service.sign_in(provider, '/auth/callback')
+async def sign_in(provider: str, redirect_to: str = '/auth/callback'):
+    return await users_service.sign_in(provider, redirect_to)
 
 @users_router.get('/auth/callback', response_model=CallbackResponse)
 async def auth_callback(request: Request):
