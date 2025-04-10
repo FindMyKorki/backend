@@ -17,5 +17,5 @@ registered_routers: List[Router] = [
     Router(router=test_lessons_router, tag="Test Lessons"),
     Router(router=users_router, tag="Users"),
     Router(router=profiles_router, tag="Profiles"),
-    Router(router=chat_logic_router, tag="Chat_realtime"),
+    Router(router=chat_logic_router, tag="Chat Logic"),
 ]
