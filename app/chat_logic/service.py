@@ -1,5 +1,6 @@
 from core.db_connection import supabase
 from .dataclasses import Message
+from datetime import datetime, timezone
 
 
 class ChatLogicService:
@@ -26,3 +27,18 @@ class ChatLogicService:
                            .eq("is_read", False)\
                            .execute()
         return [Message(**msg) for msg in messages.data]
+    
+    async def create_chat(self, tutor_id: str, student_id: str):
+        """Create a new chat between a tutor and a student"""
+        new_chat = {
+            "tutor_id": tutor_id,
+            "student_id": student_id,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "last_updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+        result = supabase.table("chats").insert(new_chat).execute()
+
+        if not result.data:
+            raise Exception("Failed to create chat")
+        return result.data[0]

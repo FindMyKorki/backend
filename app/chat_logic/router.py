@@ -46,3 +46,13 @@ async def chat_websocket(websocket: WebSocket, chat_id: int):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         
+@chat_logic_router.post("/chats")
+async def create_chat(tutor_id: str, student_id: str):
+    """
+    Create a new chat between a tutor and a student
+    """
+    try:
+        new_chat = await chat_service.create_chat(tutor_id, student_id)
+        return {"success": True, "chat": new_chat}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
