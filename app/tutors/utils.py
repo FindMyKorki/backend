@@ -6,7 +6,7 @@ async def get_tutor_profile_data(tutor_id: str):
     """Get tutor profile data from the database"""
     tutor = (
         supabase.table('tutor_profiles')
-        .select("*, profiles(full_name, avatar_url), reviews(id, student_id, tutor_id, rating, comment, created_at)")
+        .select("*, profiles(full_name, avatar_url), reviews!tutor_profiles_featured_review_id_fkey(id, student_id, tutor_id, rating, comment, created_at)")
         .eq("id", tutor_id)
         .execute()
     )

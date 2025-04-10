@@ -147,23 +147,25 @@ class UsersService:
 
             # Do not update auth.users records
             avatar_url = None
-            if request.avatar_url:
+            if request.avatar_url or request.full_name:
                 # Check if profile exists
                 profile_data = await get_profile_data(user_id)
 
+                update_data = {}
+                if request.avatar_url:
+                    update_data["avatar_url"] = request.avatar_url
+                if request.full_name:
+                    update_data["full_name"] = request.full_name
+
                 if profile_data:
                     # Update existing profile
-                    supabase.table("profiles").update({
-                        "avatar_url": request.avatar_url
-                    }).eq("id", user_id).execute()
+                    supabase.table("profiles").update(update_data).eq("id", user_id).execute()
                 else:
                     # Create new profile
-                    supabase.table("profiles").insert({
-                        "id": user_id,
-                        "avatar_url": request.avatar_url
-                    }).execute()
+                    update_data["id"] = user_id
+                    supabase.table("profiles").insert(update_data).execute()
 
-                avatar_url = request.avatar_url
+                avatar_url = update_data.get("avatar_url", None)
             else:
                 # Get current avatar_url
                 profile = await get_profile_data(user_id)
