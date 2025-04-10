@@ -2,22 +2,13 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Tuple
 import logging
 
-from core.db_connection import supabase, get_tutor_unavailabilities, get_tutor_bookings
+from core.db_connection import supabase
 from .dataclasses import AvailableTimeBlock, TutorAvailabilityResponse
 from .utils import subtract_time_blocks, standardize_datetime, generate_occurrences
 
 logger = logging.getLogger(__name__)
 
 def merge_overlapping_blocks(blocks: List[Tuple[datetime, datetime]]) -> List[Tuple[datetime, datetime]]:
-    """
-    Merge overlapping time blocks into a single block.
-
-    Args:
-        blocks (List[Tuple[datetime, datetime]]): List of time blocks to merge.
-
-    Returns:
-        List[Tuple[datetime, datetime]]: List of merged time blocks.
-    """
     if not blocks:
         return []
     sorted_blocks = sorted(blocks, key=lambda x: x[0])
@@ -30,38 +21,25 @@ def merge_overlapping_blocks(blocks: List[Tuple[datetime, datetime]]) -> List[Tu
             result.append((current_start, current_end))
     return result
 
-
 def parse_datetime(dt: str | datetime) -> datetime:
-    """
-    Parse a datetime string or standardize a datetime object to UTC.
-
-    Args:
-        dt (str | datetime): Datetime string or object to parse.
-
-    Returns:
-        datetime: Parsed datetime object in UTC.
-    """
     if isinstance(dt, str):
         return datetime.fromisoformat(dt.replace('Z', '+00:00'))
     return standardize_datetime(dt)
 
-
 class TutorsAvailabilityService:
+    MIN_BLOCK_DURATION_MINUTES = 45
+
     async def get_tutor_available_hours(self, tutor_id: str, start_date: datetime, end_date: datetime) -> TutorAvailabilityResponse:
-        """
-        Retrieve available time blocks for a tutor within a specified date range.
-
-        Args:
-            tutor_id (str): The ID of the tutor.
-            start_date (datetime): The start of the query range (inclusive).
-            end_date (datetime): The end of the query range (inclusive).
-
-        Returns:
-            TutorAvailabilityResponse: A response containing the list of available time blocks.
-        """
         try:
             if start_date > end_date:
                 raise ValueError("start_date must be before end_date")
+
+            tutor_exists = supabase.table("tutor_profiles").select("id").eq("id", tutor_id).execute()
+            if not tutor_exists.data:
+                raise ValueError(f"Tutor with id {tutor_id} does not exist")
+
+            start_date = standardize_datetime(start_date)
+            end_date = standardize_datetime(end_date)
 
             availabilities = await self._get_tutor_availabilities(tutor_id)
             unavailabilities = await self._get_tutor_unavailabilities(tutor_id, start_date, end_date)
@@ -75,19 +53,27 @@ class TutorsAvailabilityService:
                 end = parse_datetime(u["end_time"])
                 unavailability_blocks.append((start, end))
 
-            booking_blocks = [(b["start_time"], b["end_time"]) for b in bookings]
+            booking_blocks = [(b["start_date"], b["end_date"]) for b in bookings]
 
             available_blocks = subtract_time_blocks(availability_blocks, unavailability_blocks)
             final_blocks = subtract_time_blocks(available_blocks, booking_blocks)
             merged_blocks = merge_overlapping_blocks(final_blocks)
 
+            min_duration = timedelta(minutes=self.MIN_BLOCK_DURATION_MINUTES)
+            filtered_blocks = [
+                (start, end) for start, end in merged_blocks
+                if (end - start) >= min_duration
+            ]
+
             deduplicated_blocks = []
             seen = set()
-            for start, end in merged_blocks:
-                key = (start, end)
+            for start, end in filtered_blocks:
+                key = (start.date(), start.time(), end.time())
                 if key not in seen:
                     seen.add(key)
                     deduplicated_blocks.append(AvailableTimeBlock(start_date=start, end_date=end))
+
+            deduplicated_blocks.sort(key=lambda x: x.start_date)
 
             return TutorAvailabilityResponse(available_blocks=deduplicated_blocks)
         except ValueError as e:
@@ -98,89 +84,52 @@ class TutorsAvailabilityService:
             return TutorAvailabilityResponse(available_blocks=[])
 
     async def _get_tutor_availabilities(self, tutor_id: str):
-        """
-        Fetch tutor availabilities from the database.
-
-        Args:
-            tutor_id (str): The ID of the tutor.
-
-        Returns:
-            List[dict]: List of availability records.
-        """
         try:
             recurring = supabase.table("availabilities").select("*").eq("tutor_id", tutor_id).not_.is_("recurrence_rule", "null").not_.eq("recurrence_rule", "").execute()
             current_time = datetime.now(timezone.utc).isoformat()
             nonrecurring = supabase.table("availabilities").select("*").eq("tutor_id", tutor_id).or_(f"recurrence_rule.is.null,recurrence_rule.eq.").gte("end_time", current_time).execute()
-            return recurring.data + nonrecurring.data
+            availabilities = recurring.data + nonrecurring.data
+            return [
+                a for a in availabilities
+                if a.get("start_time") and a.get("end_time")
+            ]
         except Exception as e:
             logger.error(f"Failed to fetch availabilities for tutor {tutor_id}: {str(e)}")
             return []
 
     async def _get_tutor_unavailabilities(self, tutor_id: str, start_date: datetime, end_date: datetime):
-        """
-        Fetch tutor unavailabilities from the database.
-
-        Args:
-            tutor_id (str): The ID of the tutor.
-            start_date (datetime): Start of the query range.
-            end_date (datetime): End of the query range.
-
-        Returns:
-            List[dict]: List of unavailability records.
-        """
         try:
-            return await get_tutor_unavailabilities(tutor_id, start_date, end_date)
+            unavailabilities = supabase.table("unavailabilities").select("*").eq("tutor_id", tutor_id).gte("start_time", start_date.isoformat()).lte("end_time", end_date.isoformat()).execute()
+            return [
+                u for u in unavailabilities.data
+                if u.get("start_time") and u.get("end_time")
+            ]
         except Exception as e:
             logger.error(f"Failed to fetch unavailabilities for tutor {tutor_id}: {str(e)}")
             return []
 
     async def _get_tutor_confirmed_bookings(self, tutor_id: str, start_date: datetime, end_date: datetime):
-        """
-        Fetch confirmed bookings for a tutor within a date range.
-
-        Args:
-            tutor_id (str): The ID of the tutor.
-            start_date (datetime): Start of the query range.
-            end_date (datetime): End of the query range.
-
-        Returns:
-            List[dict]: List of confirmed booking records.
-        """
         try:
-            all_bookings = get_tutor_bookings(tutor_id)
+            bookings = supabase.table("bookings").select("bookings.*").eq("status", "accepted").join("offers", "bookings.offer_id = offers.id").eq("offers.tutor_id", tutor_id).gte("start_date", start_date.isoformat()).lte("end_date", end_date.isoformat()).execute()
             filtered_bookings = []
-            for booking in all_bookings:
-                start = parse_datetime(booking.get("start_time"))
-                end = parse_datetime(booking.get("end_time"))
-                if start and end and (
-                    (start >= start_date and start <= end_date) or
-                    (end >= start_date and end <= end_date) or
-                    (start <= start_date and end >= end_date)
-                ):
-                    filtered_bookings.append({
-                        "id": booking.get("id"),
-                        "start_time": start,
-                        "end_time": end,
-                        "offer_id": booking.get("offer_id"),
-                        "status": booking.get("status")
-                    })
+            for booking in bookings.data:
+                if not (booking.get("start_date") and booking.get("end_date")):
+                    continue
+                start = parse_datetime(booking.get("start_date"))
+                end = parse_datetime(booking.get("end_date"))
+                filtered_bookings.append({
+                    "id": booking.get("id"),
+                    "start_date": start,
+                    "end_date": end,
+                    "offer_id": booking.get("offer_id"),
+                    "status": booking.get("status")
+                })
             return filtered_bookings
         except Exception as e:
             logger.error(f"Failed to fetch bookings for tutor {tutor_id}: {str(e)}")
             return []
 
     async def _generate_availability_blocks(self, availabilities, start_date: datetime, end_date: datetime) -> List[Tuple[datetime, datetime]]:
-        """
-        Generate availability blocks based on tutor availabilities and recurrence rules.
-
-        Args:
-            availabilities (List[dict]): List of availability records.
-            start_date (datetime): Start of the query range.
-            end_date (datetime): End of the query range.
-
-        Returns:
-            List[Tuple[datetime, datetime]]: List of generated availability blocks.
-        """
         blocks = []
         for availability in availabilities:
             if "start_time" not in availability or "end_time" not in availability:
