@@ -12,41 +12,28 @@ class Level(BaseModel):
         from_attributes = True
 
 
-class Offer(BaseModel):
-    id: int
-    tutor_id: str
+class BaseOffer(BaseModel):
     price: Optional[float]
-    subject: Optional[Subject]
     title: Optional[str]
     description: Optional[str]
     is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
+class Offer(BaseOffer):
+    id: int
+    tutor_id: str
+    subject: Optional[Subject]
     created_at: datetime
     level: Optional[Level]
 
-    class Config:
-        from_attributes = True
 
-
-class CreateOffer(BaseModel):
-    price: Optional[float]
+class CreateOffer(BaseOffer):
     subject_id: Optional[int]
-    title: Optional[str]
-    description: Optional[str]
-    is_active: bool
     level_id: Optional[int]
 
-    class Config:
-        from_attributes = True
 
-
-class UpdateOffer(BaseModel):
+class UpdateOffer(CreateOffer):
     id: int
-    price: Optional[float]
-    subject_id: Optional[int]
-    title: Optional[str]
-    description: Optional[str]
-    is_active: bool
-    level_id: Optional[int]
-
-    class Config:
-        from_attributes = True
