@@ -1,13 +1,23 @@
-from datetime import datetime, timedelta, timezone, time
+from datetime import datetime, timedelta, timezone
 from typing import List, Tuple
-from fastapi import HTTPException
+import logging
 
 from core.db_connection import supabase, get_tutor_unavailabilities, get_tutor_bookings
 from .dataclasses import AvailableTimeBlock, TutorAvailabilityResponse
-from .utils import subtract_time_blocks, standardize_datetime, parse_recurrence_rule
+from .utils import subtract_time_blocks, standardize_datetime, generate_occurrences
 
+logger = logging.getLogger(__name__)
 
 def merge_overlapping_blocks(blocks: List[Tuple[datetime, datetime]]) -> List[Tuple[datetime, datetime]]:
+    """
+    Merge overlapping time blocks into a single block.
+
+    Args:
+        blocks (List[Tuple[datetime, datetime]]): List of time blocks to merge.
+
+    Returns:
+        List[Tuple[datetime, datetime]]: List of merged time blocks.
+    """
     if not blocks:
         return []
     sorted_blocks = sorted(blocks, key=lambda x: x[0])
@@ -22,35 +32,50 @@ def merge_overlapping_blocks(blocks: List[Tuple[datetime, datetime]]) -> List[Tu
 
 
 def parse_datetime(dt: str | datetime) -> datetime:
+    """
+    Parse a datetime string or standardize a datetime object to UTC.
+
+    Args:
+        dt (str | datetime): Datetime string or object to parse.
+
+    Returns:
+        datetime: Parsed datetime object in UTC.
+    """
     if isinstance(dt, str):
         return datetime.fromisoformat(dt.replace('Z', '+00:00'))
     return standardize_datetime(dt)
 
 
 class TutorsAvailabilityService:
-    MIN_BLOCK_DURATION_MINUTES = 45
-
     async def get_tutor_available_hours(self, tutor_id: str, start_date: datetime, end_date: datetime) -> TutorAvailabilityResponse:
+        """
+        Retrieve available time blocks for a tutor within a specified date range.
+
+        Args:
+            tutor_id (str): The ID of the tutor.
+            start_date (datetime): The start of the query range (inclusive).
+            end_date (datetime): The end of the query range (inclusive).
+
+        Returns:
+            TutorAvailabilityResponse: A response containing the list of available time blocks.
+        """
         try:
+            if start_date > end_date:
+                raise ValueError("start_date must be before end_date")
+
             availabilities = await self._get_tutor_availabilities(tutor_id)
             unavailabilities = await self._get_tutor_unavailabilities(tutor_id, start_date, end_date)
             bookings = await self._get_tutor_confirmed_bookings(tutor_id, start_date, end_date)
 
             availability_blocks = await self._generate_availability_blocks(availabilities, start_date, end_date)
 
-            # Parsowanie unavailabilities na datetime
             unavailability_blocks = []
             for u in unavailabilities:
                 start = parse_datetime(u["start_time"])
                 end = parse_datetime(u["end_time"])
                 unavailability_blocks.append((start, end))
 
-            # Parsowanie bookings na datetime (już zrobione w _get_tutor_confirmed_bookings, ale upewniamy się)
-            booking_blocks = []
-            for b in bookings:
-                start = parse_datetime(b["start_time"]) if isinstance(b["start_time"], str) else b["start_time"]
-                end = parse_datetime(b["end_time"]) if isinstance(b["end_time"], str) else b["end_time"]
-                booking_blocks.append((start, end))
+            booking_blocks = [(b["start_time"], b["end_time"]) for b in bookings]
 
             available_blocks = subtract_time_blocks(availability_blocks, unavailability_blocks)
             final_blocks = subtract_time_blocks(available_blocks, booking_blocks)
@@ -59,31 +84,68 @@ class TutorsAvailabilityService:
             deduplicated_blocks = []
             seen = set()
             for start, end in merged_blocks:
-                key = (start.date().isoformat(), start.time().isoformat(), end.time().isoformat())
+                key = (start, end)
                 if key not in seen:
                     seen.add(key)
                     deduplicated_blocks.append(AvailableTimeBlock(start_date=start, end_date=end))
 
             return TutorAvailabilityResponse(available_blocks=deduplicated_blocks)
-        except Exception:
+        except ValueError as e:
+            logger.error(f"Invalid date range for tutor {tutor_id}: {str(e)}")
+            return TutorAvailabilityResponse(available_blocks=[], message=str(e))
+        except Exception as e:
+            logger.error(f"Unexpected error while fetching available hours for tutor {tutor_id}: {str(e)}")
             return TutorAvailabilityResponse(available_blocks=[])
 
     async def _get_tutor_availabilities(self, tutor_id: str):
+        """
+        Fetch tutor availabilities from the database.
+
+        Args:
+            tutor_id (str): The ID of the tutor.
+
+        Returns:
+            List[dict]: List of availability records.
+        """
         try:
             recurring = supabase.table("availabilities").select("*").eq("tutor_id", tutor_id).not_.is_("recurrence_rule", "null").not_.eq("recurrence_rule", "").execute()
             current_time = datetime.now(timezone.utc).isoformat()
             nonrecurring = supabase.table("availabilities").select("*").eq("tutor_id", tutor_id).or_(f"recurrence_rule.is.null,recurrence_rule.eq.").gte("end_time", current_time).execute()
             return recurring.data + nonrecurring.data
-        except Exception:
+        except Exception as e:
+            logger.error(f"Failed to fetch availabilities for tutor {tutor_id}: {str(e)}")
             return []
 
     async def _get_tutor_unavailabilities(self, tutor_id: str, start_date: datetime, end_date: datetime):
+        """
+        Fetch tutor unavailabilities from the database.
+
+        Args:
+            tutor_id (str): The ID of the tutor.
+            start_date (datetime): Start of the query range.
+            end_date (datetime): End of the query range.
+
+        Returns:
+            List[dict]: List of unavailability records.
+        """
         try:
             return await get_tutor_unavailabilities(tutor_id, start_date, end_date)
-        except Exception:
+        except Exception as e:
+            logger.error(f"Failed to fetch unavailabilities for tutor {tutor_id}: {str(e)}")
             return []
 
     async def _get_tutor_confirmed_bookings(self, tutor_id: str, start_date: datetime, end_date: datetime):
+        """
+        Fetch confirmed bookings for a tutor within a date range.
+
+        Args:
+            tutor_id (str): The ID of the tutor.
+            start_date (datetime): Start of the query range.
+            end_date (datetime): End of the query range.
+
+        Returns:
+            List[dict]: List of confirmed booking records.
+        """
         try:
             all_bookings = get_tutor_bookings(tutor_id)
             filtered_bookings = []
@@ -103,10 +165,22 @@ class TutorsAvailabilityService:
                         "status": booking.get("status")
                     })
             return filtered_bookings
-        except Exception:
+        except Exception as e:
+            logger.error(f"Failed to fetch bookings for tutor {tutor_id}: {str(e)}")
             return []
 
     async def _generate_availability_blocks(self, availabilities, start_date: datetime, end_date: datetime) -> List[Tuple[datetime, datetime]]:
+        """
+        Generate availability blocks based on tutor availabilities and recurrence rules.
+
+        Args:
+            availabilities (List[dict]): List of availability records.
+            start_date (datetime): Start of the query range.
+            end_date (datetime): End of the query range.
+
+        Returns:
+            List[Tuple[datetime, datetime]]: List of generated availability blocks.
+        """
         blocks = []
         for availability in availabilities:
             if "start_time" not in availability or "end_time" not in availability:
@@ -114,52 +188,20 @@ class TutorsAvailabilityService:
             try:
                 avail_start = parse_datetime(availability["start_time"])
                 avail_end = parse_datetime(availability["end_time"])
-                has_recurrence = "recurrence_rule" in availability and availability["recurrence_rule"]
-                avail_day_of_week = avail_start.isoweekday()
+                recurrence_rule = availability.get("recurrence_rule", "")
 
-                end_date_day = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+                occurrences = generate_occurrences(
+                    start_date=avail_start,
+                    end_date=avail_end,
+                    recurrence_rule=recurrence_rule,
+                    query_start=start_date,
+                    query_end=end_date
+                )
 
-                # Dla rekordów z regułą rekurencji sprawdzamy, czy zakres zapytania pokrywa się z okresem rekurencji
-                if has_recurrence:
-                    # Określamy datę końca rekurencji (UNTIL lub end_date zapytania)
-                    rule_dict = parse_recurrence_rule(availability["recurrence_rule"])
-                    recurrence_end = end_date_day
-                    if "UNTIL" in rule_dict and len(rule_dict["UNTIL"]) >= 8:
-                        year, month, day = map(int, [rule_dict["UNTIL"][0:4], rule_dict["UNTIL"][4:6], rule_dict["UNTIL"][6:8]])
-                        recurrence_end = min(recurrence_end, datetime(year, month, day, 23, 59, 59, tzinfo=timezone.utc))
-
-                    # Sprawdzamy, czy zakres zapytania pokrywa się z okresem rekurencji
-                    if avail_start > end_date_day or recurrence_end < start_date:
-                        continue
-
-                    # Punkt startowy iteracji: maksimum z start_date zapytania i start_time dostępności
-                    iter_start = max(start_date, avail_start).replace(hour=0, minute=0, second=0, microsecond=0)
-                else:
-                    # Dla rekordów bez rekurencji iterujemy od start_date zapytania
-                    iter_start = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
-                    # Jeśli start_time dostępności jest po end_date zapytania, pomijamy
-                    if avail_start > end_date_day:
-                        continue
-
-                current_date = iter_start
-                while current_date <= end_date_day:
-                    if (has_recurrence and self._day_matches_recurrence(availability, current_date)) or \
-                       (not has_recurrence and current_date.isoweekday() == avail_day_of_week):
-                        block_start = datetime.combine(current_date.date(), avail_start.time(), tzinfo=timezone.utc)
-                        block_end = datetime.combine(current_date.date(), avail_end.time(), tzinfo=timezone.utc)
-                        if block_start <= end_date and block_end >= start_date:
-                            blocks.append((max(block_start, start_date), min(block_end, end_date)))
-                    current_date += timedelta(days=1)
-            except Exception:
+                for block_start, block_end in occurrences:
+                    if block_start <= end_date and block_end >= start_date:
+                        blocks.append((max(block_start, start_date), min(block_end, end_date)))
+            except Exception as e:
+                logger.error(f"Failed to generate availability blocks: {str(e)}")
                 continue
         return merge_overlapping_blocks(blocks)
-
-    def _day_matches_recurrence(self, availability, date):
-        if "recurrence_rule" not in availability or not availability["recurrence_rule"]:
-            return False
-        rule = availability["recurrence_rule"]
-        if "BYDAY=" in rule:
-            byday = rule.split("BYDAY=")[1].split(";")[0].split(",")
-            day_abbrs = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
-            return day_abbrs[date.isoweekday() - 1] in byday
-        return "FREQ=DAILY" in rule
