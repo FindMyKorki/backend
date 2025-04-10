@@ -25,7 +25,7 @@ class RefreshTokensRequest(BaseModel):
 
 class SignInResponse(BaseModel):
     code_verifier: str
-    oauth_repsponse: OAuthResponse
+    oauth_response: OAuthResponse
 
     class Config:
         from_attributes = True
