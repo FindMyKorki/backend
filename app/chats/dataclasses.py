@@ -1,16 +1,16 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Any
 
 
 class Message(BaseModel):
     id: int
-    created_at: datetime
+    sent_at: datetime  # Changed from created_at to sent_at to match DB
     chat_id: int
     sender_id: str
-    content: str
+    content: Any  # Changed from str to Any since it's JSON in the database
     is_read: bool
-    is_message: bool
+    is_media: bool  # Changed from is_message to is_media to match DB
 
     class Config:
         from_attributes = True

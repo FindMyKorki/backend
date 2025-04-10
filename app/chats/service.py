@@ -52,7 +52,7 @@ class ChatsService:
         messages = supabase.table("messages")\
                           .select("*")\
                           .eq("chat_id", chat_id)\
-                          .order("created_at")\
+                          .order("sent_at")\
                           .execute()
         
         return MessageResponse(messages=messages.data or [])

@@ -6,11 +6,7 @@ from .dataclasses import StudentReview
 class StudentReviewsService:
     async def get_student_reviews(self, student_id: str) -> list[StudentReview]:
         """Get all reviews for a student"""
-        try:
-            student = supabase.auth.admin.get_user_by_id(student_id).user
-        except:
-            raise HTTPException(status_code=404, detail="Student not found")
-        
+        # Using the correct table name "reviews" from your schema
         reviews = (
             supabase.table("reviews")
             .select("*")
