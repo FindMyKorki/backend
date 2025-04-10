@@ -201,6 +201,27 @@ class TestTimeBlockSubtraction:
         assert len(result) == 1
         assert result[0] == (datetime(2025, 3, 28, 16, 0, tzinfo=timezone.utc), datetime(2025, 3, 28, 20, 0, tzinfo=timezone.utc))
     
+    def test_day_long_availability_with_unavailability(self):
+        """Test specifically to debug the problem with availabilities and unavailabilities handling difference"""
+        # Availability spanning whole day
+        base_blocks = [(
+            datetime(2025, 4, 10, 10, 0, tzinfo=timezone.utc), 
+            datetime(2025, 4, 10, 18, 0, tzinfo=timezone.utc)
+        )]
+        
+        # Unavailability in the middle of the day (13:00-14:00)
+        subtract_blocks = [(
+            datetime(2025, 4, 10, 13, 0, tzinfo=timezone.utc), 
+            datetime(2025, 4, 10, 14, 0, tzinfo=timezone.utc)
+        )]
+        
+        result = subtract_time_blocks(base_blocks, subtract_blocks)
+        
+        # Should result in two blocks: 10:00-13:00 and 14:00-18:00
+        assert len(result) == 2
+        assert result[0] == (datetime(2025, 4, 10, 10, 0, tzinfo=timezone.utc), datetime(2025, 4, 10, 13, 0, tzinfo=timezone.utc))
+        assert result[1] == (datetime(2025, 4, 10, 14, 0, tzinfo=timezone.utc), datetime(2025, 4, 10, 18, 0, tzinfo=timezone.utc))
+    
     def test_multiple_subtractions(self):
         """Test subtracting multiple blocks from one block"""
         base_blocks = [(datetime(2025, 3, 28, 16, 0, tzinfo=timezone.utc), datetime(2025, 3, 28, 20, 0, tzinfo=timezone.utc))]
