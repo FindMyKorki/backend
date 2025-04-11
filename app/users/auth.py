@@ -1,3 +1,5 @@
+from os import access
+
 from core.db_connection import supabase
 from profiles.utils import get_profile_data
 from profiles.dataclasses import Profile
