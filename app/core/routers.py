@@ -11,6 +11,14 @@ from student_reviews.router import student_reviews_router
 from issue_reports.router import issue_reports_router
 from user_reports.router import user_reports_router
 from offer_reports.router import offer_reports_router
+from offers.router import offers_router
+from profiles.router import profiles_router
+from subjects.router import subjects_router
+from levels.router import levels_router
+from bookings.router import bookings_router
+from reviews.router import reviews_router
+from test_lessons.router import test_lessons_router
+from tutors.router import tutor_router
 
 
 class Router:
@@ -30,4 +38,11 @@ registered_routers: List[Router] = [
     Router(router=issue_reports_router, tag="Issue Reports"),
     Router(router=user_reports_router, tag="User Reports"),
     Router(router=offer_reports_router, tag="Offer Reports"),
+    Router(router=subjects_router, tag="Subjects"),
+    Router(router=levels_router, tag="Levels"),
+    Router(router=bookings_router, tag="Bookings"),
+    Router(router=tutor_router, tag="Tutors"),
+    Router(router=offers_router, tag="Offers"),
+    Router(router=reviews_router, tag="Reviews"),
+    Router(router=availabilities_router, tag="(Un)availabilities"),
 ]
