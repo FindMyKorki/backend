@@ -1,7 +1,15 @@
 from datetime import datetime
 from pydantic import BaseModel
-from typing import Optional
 
+
+class Profile(BaseModel):
+    id: str
+    full_name: str
+    is_tutor: bool
+    avatar_url: str
+
+    class Config:
+        from_attributes = True
 
 class CreateProfile(BaseModel):
     full_name: str
@@ -9,8 +17,3 @@ class CreateProfile(BaseModel):
 
     class Config:
         from_attributes = True
-
-
-class Profile(CreateProfile):
-    id: str
-    is_tutor: bool

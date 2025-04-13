@@ -1,14 +1,12 @@
 from core.db_connection import supabase
 from fastapi import HTTPException
 
-from .dataclasses import TutorResponse
 
-
-async def get_tutor_profile_data(tutor_id: str) -> TutorResponse:
+async def get_tutor_profile_data(tutor_id: str):
+    """Get tutor profile data from the database"""
     tutor = (
         supabase.table('tutor_profiles')
-        .select(
-            "id, bio, bio_long, rating, contact_email, phone_number, profiles(full_name, avatar_url), reviews!tutor_profiles_featured_review_id_fkey(id, student_id, tutor_id, rating, comment, created_at)")
+        .select("*, profiles(full_name, avatar_url), reviews!tutor_profiles_featured_review_id_fkey(id, student_id, tutor_id, rating, comment, created_at)")
         .eq("id", tutor_id)
         .execute()
     )
@@ -19,16 +17,26 @@ async def get_tutor_profile_data(tutor_id: str) -> TutorResponse:
     return None
 
 
-def flatten_tutor_data(tutor_data: {}) -> TutorResponse:
+def flatten_tutor_data(tutor_data: dict):
+    """Transform nested tutor profile data into a flat structure"""
+    profile = tutor_data.get("profiles", {}) or {}
+    featured_review = tutor_data.get("reviews", {}) or {}
+
     return {
+        "id": tutor_data["id"],
         "bio": tutor_data["bio"],
-        "bio_long": tutor_data["bio_long"],
+        "bio_long": tutor_data.get("bio_long"),
         "rating": tutor_data["rating"],
-        "contact_email": tutor_data["contact_email"],
-        "phone_number": tutor_data["phone_number"],
-        "featured_review_id": tutor_data["reviews"].get("id") if tutor_data.get("reviews") else None,
-        "featured_review_rating": tutor_data["reviews"].get("rating") if tutor_data.get("reviews") else None,
-        "featured_review_comment": tutor_data["reviews"].get("comment") if tutor_data.get("reviews") else None,
-        "full_name": tutor_data["profiles"].get("full_name") if tutor_data.get("profiles") else None,
-        "avatar_url": tutor_data["profiles"].get("avatar_url") if tutor_data.get("profiles") else None,
+        "contact_email": tutor_data.get("contact_email"),
+        "phone_number": tutor_data.get("phone_number"),
+        "featured_review": {
+            "id": featured_review.get("id"),
+            "student_id": featured_review.get("student_id"),
+            "tutor_id": featured_review.get("tutor_id"),
+            "rating": featured_review.get("rating"),
+            "comment": featured_review.get("comment"),
+            "created_at": featured_review.get("created_at"),
+        } if featured_review else None,
+        "full_name": profile.get("full_name"),
+        "avatar_url": profile.get("avatar_url"),
     }
