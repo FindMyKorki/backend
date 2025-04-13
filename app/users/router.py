@@ -1,3 +1,5 @@
+import os
+
 from .service import UsersService
 from .dataclasses import RefreshTokensRequest, CodeForSessionResponse, TokensResponse, SignInResponse, CallbackResponse, CreateUserRequest, UserResponse, UpdateUserRequest
 from .auth import authenticate_sign_out, authenticate_user
@@ -9,7 +11,9 @@ users_service = UsersService()
 
 @users_router.get('/auth/sign-in/{provider}', response_model=SignInResponse)
 async def sign_in(provider: str):
-    return await users_service.sign_in(provider, '/auth/callback')
+    FRONTEND_SERVER_URL = os.getenv("FRONTEND_SERVER_URL")
+    url = FRONTEND_SERVER_URL + "/auth/callback"
+    return await users_service.sign_in(provider, url)
 
 @users_router.get('/auth/callback', response_model=CallbackResponse)
 async def auth_callback(request: Request):
