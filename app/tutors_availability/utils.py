@@ -125,3 +125,50 @@ def subtract_time_blocks(base_blocks: List[Tuple[datetime, datetime]], subtract_
             current_blocks = new_blocks
         result.extend(current_blocks)
     return result
+
+def merge_overlapping_blocks(blocks: List[Tuple[datetime, datetime]]) -> List[Tuple[datetime, datetime]]:
+    if not blocks:
+        return []
+    sorted_blocks = sorted(blocks, key=lambda x: x[0])
+    result = [sorted_blocks[0]]
+    for current_start, current_end in sorted_blocks[1:]:
+        prev_start, prev_end = result[-1]
+        if current_start <= prev_end:
+            result[-1] = (prev_start, max(prev_end, current_end))
+        else:
+            result.append((current_start, current_end))
+    return result
+
+
+def parse_datetime(dt: str | datetime) -> datetime:
+    if isinstance(dt, str):
+        return datetime.fromisoformat(dt.replace('Z', '+00:00'))
+    return standardize_datetime(dt)
+
+
+async def generate_availability_blocks(availabilities, start_date: datetime, end_date: datetime) -> List[Tuple[datetime, datetime]]:
+    blocks = []
+    for availability in availabilities:
+        if "start_time" not in availability or "end_time" not in availability:
+            continue
+        try:
+            avail_start = parse_datetime(availability["start_time"])
+            avail_end = parse_datetime(availability["end_time"])
+            recurrence_rule = availability.get("recurrence_rule", "")
+
+            occurrences = generate_occurrences(
+                start_date=avail_start,
+                end_date=avail_end,
+                recurrence_rule=recurrence_rule,
+                query_start=start_date,
+                query_end=end_date
+            )
+
+            for block_start, block_end in occurrences:
+                if block_start <= end_date and block_end >= start_date:
+                    blocks.append((max(block_start, start_date), min(block_end, end_date)))
+        except Exception as e:
+            print(f"Failed to generate availability blocks: {str(e)}")
+            continue
+    return merge_overlapping_blocks(blocks)
+

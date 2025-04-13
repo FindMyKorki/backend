@@ -4,27 +4,10 @@ import logging
 
 from core.db_connection import supabase
 from .dataclasses import AvailableTimeBlock, TutorAvailabilityResponse
-from .utils import subtract_time_blocks, standardize_datetime, generate_occurrences
+from .utils import subtract_time_blocks, standardize_datetime, generate_occurrences, merge_overlapping_blocks, parse_datetime, generate_availability_blocks
 
 logger = logging.getLogger(__name__)
 
-def merge_overlapping_blocks(blocks: List[Tuple[datetime, datetime]]) -> List[Tuple[datetime, datetime]]:
-    if not blocks:
-        return []
-    sorted_blocks = sorted(blocks, key=lambda x: x[0])
-    result = [sorted_blocks[0]]
-    for current_start, current_end in sorted_blocks[1:]:
-        prev_start, prev_end = result[-1]
-        if current_start <= prev_end:
-            result[-1] = (prev_start, max(prev_end, current_end))
-        else:
-            result.append((current_start, current_end))
-    return result
-
-def parse_datetime(dt: str | datetime) -> datetime:
-    if isinstance(dt, str):
-        return datetime.fromisoformat(dt.replace('Z', '+00:00'))
-    return standardize_datetime(dt)
 
 class TutorsAvailabilityService:
     MIN_BLOCK_DURATION_MINUTES = 45
@@ -45,7 +28,9 @@ class TutorsAvailabilityService:
             unavailabilities = await self._get_tutor_unavailabilities(tutor_id, start_date, end_date)
             bookings = await self._get_tutor_confirmed_bookings(tutor_id, start_date, end_date)
 
-            availability_blocks = await self._generate_availability_blocks(availabilities, start_date, end_date)
+
+
+            availability_blocks = await generate_availability_blocks(availabilities, start_date, end_date)
 
             unavailability_blocks = []
             for u in unavailabilities:
@@ -110,7 +95,7 @@ class TutorsAvailabilityService:
 
     async def _get_tutor_confirmed_bookings(self, tutor_id: str, start_date: datetime, end_date: datetime):
         try:
-            bookings = supabase.table("bookings").select("bookings.*").eq("status", "accepted").join("offers", "bookings.offer_id = offers.id").eq("offers.tutor_id", tutor_id).gte("start_date", start_date.isoformat()).lte("end_date", end_date.isoformat()).execute()
+            bookings = supabase.table("bookings").select("*, offers!inner(tutor_id)").eq("status", "accepted").eq("offers.tutor_id", tutor_id).gte("start_date", start_date.isoformat()).lte("end_date", end_date.isoformat()).execute()
             filtered_bookings = []
             for booking in bookings.data:
                 if not (booking.get("start_date") and booking.get("end_date")):
@@ -128,29 +113,3 @@ class TutorsAvailabilityService:
         except Exception as e:
             logger.error(f"Failed to fetch bookings for tutor {tutor_id}: {str(e)}")
             return []
-
-    async def _generate_availability_blocks(self, availabilities, start_date: datetime, end_date: datetime) -> List[Tuple[datetime, datetime]]:
-        blocks = []
-        for availability in availabilities:
-            if "start_time" not in availability or "end_time" not in availability:
-                continue
-            try:
-                avail_start = parse_datetime(availability["start_time"])
-                avail_end = parse_datetime(availability["end_time"])
-                recurrence_rule = availability.get("recurrence_rule", "")
-
-                occurrences = generate_occurrences(
-                    start_date=avail_start,
-                    end_date=avail_end,
-                    recurrence_rule=recurrence_rule,
-                    query_start=start_date,
-                    query_end=end_date
-                )
-
-                for block_start, block_end in occurrences:
-                    if block_start <= end_date and block_end >= start_date:
-                        blocks.append((max(block_start, start_date), min(block_end, end_date)))
-            except Exception as e:
-                logger.error(f"Failed to generate availability blocks: {str(e)}")
-                continue
-        return merge_overlapping_blocks(blocks)
