@@ -54,7 +54,7 @@ class ProposeBookingRequest(BaseModel):
     offer_id: int
     start_date: datetime
     end_date: datetime
-    notes: Optional[str]
+    notes: Optional[str] = ""
 
     class Config:
         from_attributes = True
@@ -67,7 +67,6 @@ class ProposeBooking(BaseModel):
     notes: Optional[str]
     status: str = 'pending'
     is_paid: bool = False
-    created_at: str = datetime.now().isoformat()
 
     class Config:
         from_attributes = True

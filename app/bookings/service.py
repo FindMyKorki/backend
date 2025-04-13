@@ -40,7 +40,7 @@ class BookingsService:
         
         new_booking = ProposeBooking(
             offer_id=booking_data.offer_id, 
-            student_id=str(student_id), 
+            student_id=str(student_id),
             start_date=start_date,
             end_date=end_date,
             notes=booking_data.notes)
@@ -53,6 +53,8 @@ class BookingsService:
 
     async def update_booking(self, booking_id: int, update_booking_data: UpdateBookingRequest) -> str:
         check_if_booking_exists(booking_id)
+        # TODO: check if user requesting update is either student or tutor related to that booking
+
         end_date = update_booking_data.end_date.isoformat()
         start_date = update_booking_data.start_date.isoformat()
         if end_date < start_date:
@@ -68,20 +70,25 @@ class BookingsService:
 
     async def accept_booking(self, booking_id: int) -> str:
         check_if_booking_exists(booking_id)
+        # TODO: check if user accepting booking is the tutor related to that booking
         return update_booking_status(booking_id, "accepted")
     
     async def reject_booking(self, booking_id: int) -> str:
         check_if_booking_exists(booking_id)
+        # TODO: check if user rejecting booking is the tutor related to that booking
         return update_booking_status(booking_id, "rejected")
     
     async def cancel_booking(self, booking_id: int) -> str:
         check_if_booking_exists(booking_id)
+        # TODO: check if user cancelling booking is either tutor or student related to that booking
         return update_booking_status(booking_id, "canceled")
     
     async def mark_booking_paid(self, booking_id: int) -> str:
         check_if_booking_exists(booking_id)
+        # TODO: check if user marking booking as paid is the tutor related to that booking
         return update_booking_is_paid(booking_id, True)
 
     async def mark_booking_unpaid(self, booking_id: int) -> str:
         check_if_booking_exists(booking_id)
+        # TODO: check if user marking booking as unpaid is the tutor related to that booking
         return update_booking_is_paid(booking_id, False)

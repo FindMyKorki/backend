@@ -1,8 +1,9 @@
 from users.auth import authenticate_user
 from bookings.service import BookingsService
-from bookings.dataclasses import TutorBookingResponse, UpdateBookingRequest, ProposeBookingRequest
+from bookings.dataclasses import TutorBookingResponse, UpdateBookingRequest, ProposeBookingRequest, StudentBookingResponse
 
 from fastapi import APIRouter, Depends
+
 
 bookings_router = APIRouter()
 bookings_service = BookingsService()
@@ -11,9 +12,9 @@ bookings_service = BookingsService()
 async def get_bookings(user_response=Depends(authenticate_user)):
     return await bookings_service.get_bookings_by_tutor(tutor_id=user_response.user.id)
 
-@bookings_router.get("/student/bookings", response_model=list[TutorBookingResponse])
+@bookings_router.get("/student/bookings", response_model=list[StudentBookingResponse])
 async def get_bookings(user_response=Depends(authenticate_user)):
-    return await bookings_service.get_bookings_by_student(tutor_id=user_response.user.id)
+    return await bookings_service.get_bookings_by_student(student_id=user_response.user.id)
 
 @bookings_router.put("/bookings/{booking_id}", response_model=str)
 async def update_booking(booking_id: int, booking_data: UpdateBookingRequest):
