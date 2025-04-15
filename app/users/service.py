@@ -1,6 +1,8 @@
 import os
 
-from .dataclasses import CodeForSessionResponse, TokensResponse, RefreshTokensRequest, SignInResponse, CallbackResponse, CreateUserRequest, UserResponse, UpdateUserRequest
+from .dataclasses import CodeForSessionResponse, TokensResponse, RefreshTokensRequest, SignInResponse, CallbackResponse, \
+    CreateUserRequest, UserResponse, UpdateUserRequest, MyUserResponse, MyProfileResponse, MyTutorProfileResponse, \
+    FeaturedReview
 from profiles.utils import get_profile_data
 from core.db_connection import supabase, SUPABASE_KEY, SUPABASE_URL
 from fastapi import HTTPException, Request
@@ -126,7 +128,64 @@ class UsersService:
             
         except AuthApiError as e:
             raise HTTPException(status_code=400, detail=e.message)
-    
+
+    async def get_self(self, user_response):
+        try:
+            id = user_response.user.id
+
+            user = MyUserResponse(
+                id = id,
+                provider_email = user_response.user.user_metadata.get("email"),
+                provider_avatar_url = user_response.user.user_metadata.get("avatar_url"),
+                provider_display_name = user_response.user.user_metadata.get("full_name")
+            )
+
+            profile = await get_profile_data(id)
+
+            if profile:
+                user.profile = MyProfileResponse(
+                    full_name = profile.get("full_name"),
+                    is_tutor = profile.get("is_tutor"),
+                    avatar_url = profile.get("avatar_url")
+                )
+
+                if profile.get("is_tutor"):
+                    tutor_profile = (
+                        supabase.table("tutor_profiles")
+                        .select(
+                            "*, reviews!tutor_profiles_featured_review_id_fkey(id, student_id, tutor_id, rating, comment, created_at)")
+                        .eq("id", id)
+                        .execute()
+                    )
+
+                    if not tutor_profile.data or len(tutor_profile.data) == 0:
+                        return user
+
+
+                    user.tutor_profile = MyTutorProfileResponse(
+                            bio = tutor_profile.data[0].get("bio"),
+                            bio_long = tutor_profile.data[0].get("bio_long"),
+                            rating = tutor_profile.data[0].get("rating"),
+                            contact_email = tutor_profile.data[0].get("contact_email"),
+                            phone_number = tutor_profile.data[0].get("phone_number"),
+                    )
+
+                    if not tutor_profile.data[0].get("featured_review_id"):
+                        return user
+
+
+                    user.tutor_profile.featured_review = FeaturedReview(
+                        id = tutor_profile.data[0].get("reviews").get("id"),
+                        comment = tutor_profile.data[0].get("reviews").get("comment"),
+                        rating = tutor_profile.data[0].get("reviews").get("rating"),
+                        student_id = tutor_profile.data[0].get("reviews").get("student_id")
+                    )
+
+            return user
+
+        except AuthApiError as e:
+            raise HTTPException(status_code=404, detail="User not found")
+
     async def get_user(self, user_id: str) -> UserResponse:
         """Get user by ID"""
         try:

@@ -40,6 +40,33 @@ class CallbackResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class MyProfileResponse(BaseModel):
+    full_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    is_tutor: bool
+
+class FeaturedReview(BaseModel):
+    id: int
+    rating: Optional[float] = None
+    comment: str
+    student_id: str
+
+class MyTutorProfileResponse(BaseModel):
+    bio: Optional[str] = None
+    bio_long: Optional[str] = None
+    rating: Optional[float] = None
+    contact_email: Optional[str] = None
+    phone_number: Optional[str] = None
+    featured_review: Optional[FeaturedReview] = None
+
+
+class MyUserResponse(BaseModel):
+    id: str
+    provider_email: str
+    provider_display_name: str
+    profile: Optional[MyProfileResponse] = None
+    tutor_profile: Optional[MyTutorProfileResponse] = None
+
 
 class UserResponse(BaseModel):
     id: str

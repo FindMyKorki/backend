@@ -31,6 +31,10 @@ async def refresh_tokens(request: RefreshTokensRequest):
 
 # New endpoints below
 
+@users_router.get('/user')
+async def get_user(user_response=Depends(authenticate_user)):
+    return await users_service.get_self(user_response)
+
 @users_router.get('/users/{user_id}', response_model=UserResponse)
 async def get_user(user_id: str):
     """Get a user by ID"""
