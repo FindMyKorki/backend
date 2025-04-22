@@ -12,15 +12,46 @@ chat_logic_router = APIRouter(
 
 chat_service = ChatLogicService()
 
+async def verify_user_in_chat(websocket: WebSocket, chat_id: int, user_id: str):
+    print(f"Verifying user {user_id} for chat {chat_id}")
+    try:
+        result = supabase.table("chats")\
+            .select("*")\
+            .eq("id", chat_id)\
+            .execute()
 
+        if not result.data:
+            await websocket.close(code=403)
+            return
+
+        chat = result.data[0]
+        if chat["tutor_id"] != user_id and chat["student_id"] != user_id:
+            await websocket.close(code=403)
+            return
+        if not result.data:
+            print(f"User {user_id} is not part of chat {chat_id}")
+            await websocket.close(code=403)
+            return
+    except Exception as e:
+        print(f"Supabase query failed: {e}")
+        await websocket.close(code=500)
+        return
+    
 @chat_logic_router.websocket("/ws/{chat_id}")
 async def chat_websocket(websocket: WebSocket, chat_id: int):
-    """WebSocket for real-time chat"""
+    """WebSocket for real-time chat with user verification"""
+    await websocket.accept()
+    user_id = websocket.query_params.get("user_id")
+    if not user_id:
+        await websocket.close(code=400)  
+        raise HTTPException(status_code=400, detail="Missing user_id in query parameters")
+
+    await verify_user_in_chat(websocket, chat_id, user_id)
+
     await manager.connect(websocket)
     try:
         while True:
             data = await websocket.receive_text()
-            # Broadcast message to all clients in the room
             message_data = json.loads(data)
 
             new_message = {
@@ -28,24 +59,15 @@ async def chat_websocket(websocket: WebSocket, chat_id: int):
                 "sender_id": message_data.get("sender_id"),
                 "content": message_data.get("content"),
                 "is_media": message_data.get("is_media", False),
-                "is_read": False,  
-                "sent_at": datetime.now(timezone.utc).isoformat(), 
+                "is_read": False,
+                "sent_at": datetime.utcnow().isoformat(),
             }
-
-            result = supabase.table("messages").insert(new_message).execute()
-
-            if not result.data:
-                await websocket.send_text(json.dumps({
-                    "error": "Failed to save message to the database"
-                }))
-                continue
-            try:
-                await manager.broadcast(json.dumps(new_message))
-            except RuntimeError:
-                pass
+            supabase.table("messages").insert(new_message).execute()
+            await manager.broadcast(json.dumps(new_message))
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         
+
 @chat_logic_router.post("/chats")
 async def create_chat(tutor_id: str, student_id: str):
     """
