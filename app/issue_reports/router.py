@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from users.auth import authenticate_user
-from .service import IssueReportsService
-from .dataclasses import CreateIssueReport
 
+from .dataclasses import CreateIssueReport
+from .service import IssueReportsService
 
 issue_reports_router = APIRouter()
 issue_reports_service = IssueReportsService()

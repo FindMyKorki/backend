@@ -1,19 +1,15 @@
-from datetime import datetime
 from pydantic import BaseModel
+from typing import Optional
 
 
-class Profile(BaseModel):
+class BaseProfile(BaseModel):
+    full_name: Optional[str]
+    is_tutor: bool
+    avatar_url: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+
+class Profile(BaseProfile):
     id: str
-    full_name: str
-    is_tutor: bool
-    avatar_url: str
-
-    class Config:
-        from_attributes = True
-
-class CreateProfile(BaseModel):
-    full_name: str
-    is_tutor: bool
-
-    class Config:
-        from_attributes = True

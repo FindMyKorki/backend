@@ -1,5 +1,6 @@
 from core.db_connection import supabase
 from fastapi import HTTPException
+
 from .dataclasses import StudentReview
 
 
@@ -13,5 +14,5 @@ class StudentReviewsService:
             .eq("student_id", student_id)
             .execute()
         )
-        
+
         return reviews.data or []

@@ -1,10 +1,10 @@
-from subjects.service import SubjectsService
-from subjects.dataclasses import Subject, CreateSubjectRequest
-
 from fastapi import APIRouter
+from subjects.dataclasses import Subject, CreateSubjectRequest
+from subjects.service import SubjectsService
 
 subjects_router = APIRouter()
 subjects_service = SubjectsService()
+
 
 @subjects_router.get("/subjects", response_model=list[Subject])
 async def get_subjects():

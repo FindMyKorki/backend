@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from users.auth import authenticate_user
-from .service import StudentReviewsService
-from .dataclasses import StudentReview
 
+from .dataclasses import StudentReview
+from .service import StudentReviewsService
 
 student_reviews_router = APIRouter()
 student_reviews_service = StudentReviewsService()

@@ -1,13 +1,13 @@
 from datetime import datetime
-from typing import Optional
-import uuid
 from pydantic import BaseModel
+from typing import Optional
+
 
 class Booking(BaseModel):
     id: int
     offer_id: int
-    student_id: uuid.UUID
-    status: str # "pending", "accepted", "canceled", "rejected"
+    student_id: Optional[str]
+    status: str  # "pending", "accepted", "canceled", "rejected"
     start_date: datetime
     end_date: datetime
     created_at: datetime
@@ -17,10 +17,11 @@ class Booking(BaseModel):
     class Config:
         from_attributes = True
 
+
 class TutorBookingResponse(BaseModel):
     id: int
     subject: str
-    student_id: uuid.UUID
+    student_id: str
     student_full_name: str
     avatar_url: str
     start_date: datetime
@@ -33,10 +34,11 @@ class TutorBookingResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class StudentBookingResponse(BaseModel):
     id: int
     subject: str
-    tutor_id: uuid.UUID
+    tutor_id: str
     tutor_full_name: str
     avatar_url: str
     start_date: datetime
@@ -50,6 +52,7 @@ class StudentBookingResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class ProposeBookingRequest(BaseModel):
     offer_id: int
     start_date: datetime
@@ -58,6 +61,7 @@ class ProposeBookingRequest(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class ProposeBooking(BaseModel):
     offer_id: int
@@ -71,6 +75,7 @@ class ProposeBooking(BaseModel):
     class Config:
         from_attributes = True
 
+
 class UpdateBookingRequest(BaseModel):
     start_date: datetime
     end_date: datetime
@@ -78,6 +83,7 @@ class UpdateBookingRequest(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class UpdateBooking(BaseModel):
     start_date: str
@@ -87,8 +93,23 @@ class UpdateBooking(BaseModel):
     class Config:
         from_attributes = True
 
+
 class BookingCancelRequest(BaseModel):
     canceled_by: int
+
+    class Config:
+        from_attributes = True
+
+
+# Crud
+class UpsertBooking(BaseModel):
+    offer_id: int
+    student_id: Optional[str]
+    start_date: str  # not a datetime, because supabase doesn't support it
+    end_date: str  #
+    status: str
+    notes: Optional[str]
+    is_paid: bool = False
 
     class Config:
         from_attributes = True

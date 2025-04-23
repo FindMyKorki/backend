@@ -1,10 +1,10 @@
 from core.db_connection import supabase
-from profiles.utils import get_profile_data
-from profiles.dataclasses import Profile
 from fastapi import HTTPException, Depends
-from typing import Annotated
 from fastapi.security import OAuth2PasswordBearer, HTTPBearer
 from gotrue.types import UserResponse
+from profiles.dataclasses import Profile
+from profiles.utils import get_profile_data
+from typing import Annotated
 
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl='token')
 oauth2_scheme = HTTPBearer()

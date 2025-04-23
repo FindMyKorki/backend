@@ -1,5 +1,5 @@
-from pydantic import BaseModel
 from datetime import datetime
+from pydantic import BaseModel
 from typing import Optional
 
 
@@ -20,3 +20,15 @@ class CreateIssueReport(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class BaseIssueReport(BaseModel):
+    reason: str
+    message: str
+
+    class Config:
+        from_attributes = True
+
+
+class IssueReport2(BaseIssueReport):
+    id: int

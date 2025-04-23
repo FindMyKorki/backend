@@ -1,5 +1,5 @@
-from pydantic import BaseModel
 from datetime import datetime
+from pydantic import BaseModel
 from typing import Optional, List, Any
 
 
@@ -18,7 +18,7 @@ class Message(BaseModel):
 
 class MessageResponse(BaseModel):
     messages: List[Message]
-    
+
     class Config:
         from_attributes = True
 
@@ -47,4 +47,3 @@ class ChatReportRequest(BaseModel):
 
     class Config:
         from_attributes = True
-

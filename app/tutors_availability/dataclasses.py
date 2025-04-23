@@ -1,7 +1,7 @@
+import calendar
 from datetime import datetime, timezone, date
 from pydantic import BaseModel, field_serializer
 from typing import Optional
-import calendar
 
 
 class AvailableTimeBlock(BaseModel):

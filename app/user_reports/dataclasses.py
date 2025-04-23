@@ -1,18 +1,7 @@
-from pydantic import BaseModel
 from datetime import datetime
+from profiles.dataclasses import Profile
+from pydantic import BaseModel
 from typing import Optional
-
-
-class UserReport(BaseModel):
-    id: int
-    created_at: datetime
-    user_id: str
-    reported_user_id: str
-    reason: str
-    message: str
-
-    class Config:
-        from_attributes = True
 
 
 class CreateUserReport(BaseModel):
@@ -21,3 +10,24 @@ class CreateUserReport(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class BaseUserReport(BaseModel):
+    reason: str
+    message: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+
+class UserReport(BaseUserReport):
+    id: int
+    reported_user: Profile
+
+
+class CreateUserReport2(BaseUserReport):
+    reported_user_id: str
+
+
+class UpdateUserReport(CreateUserReport):
+    id: int
