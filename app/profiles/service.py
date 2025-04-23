@@ -1,6 +1,6 @@
-from .dataclasses import BaseProfile, Profile
 from crud.crud_provider import CRUDProvider
 
+from .dataclasses import BaseProfile, Profile
 
 crud_provider = CRUDProvider('profiles')
 
@@ -63,4 +63,3 @@ class ProfilesService:
         deleted_profile = await crud_provider.delete(id)
 
         return Profile.model_validate(deleted_profile)
-    

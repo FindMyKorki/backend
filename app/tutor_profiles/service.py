@@ -1,6 +1,6 @@
-from .dataclasses import TutorProfile, BaseTutorProfile
 from crud.crud_provider import CRUDProvider
 
+from .dataclasses import TutorProfile, BaseTutorProfile
 
 crud_provider = CRUDProvider('tutor_profiles')
 

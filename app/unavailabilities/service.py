@@ -1,6 +1,6 @@
-from .dataclasses import Unavailability, BaseUnavailability
 from crud.crud_provider import CRUDProvider
 
+from .dataclasses import Unavailability, BaseUnavailability
 
 crud_provider = CRUDProvider('unavailabilities', 'tutor_id')
 

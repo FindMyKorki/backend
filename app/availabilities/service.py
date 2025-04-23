@@ -1,12 +1,43 @@
-from .dataclasses import Availability, BaseAvailability
+from core.db_connection import supabase
 from crud.crud_provider import CRUDProvider
+from fastapi import HTTPException
 
+from .dataclasses import AvailabilityHours, UnavailabilityHours
 
 crud_provider = CRUDProvider('availabilities', 'tutor_id')
 
 
-class AvailabilitiesService:
-    async def create_availability(self, user_id: str, availability: BaseAvailability) -> Availability:
+class AvailabilityService:
+    async def get_tutor_availabilities(self, tutor_id: str) -> list[AvailabilityHours]:
+        response = (
+            supabase
+            .table("availabilities")
+            .select("start_time, end_time, recurrence_rule")
+            .eq("tutor_id", tutor_id)
+            .execute()
+        )
+
+        if response.data is None or len(response.data) == 0:
+            raise HTTPException(status_code=404, detail="Offer not found")
+
+        return response.data
+
+    async def create_tutor_availability(self, tutor_id: str, request: AvailabilityHours) -> str:
+        data = request.model_dump(mode="json")
+        data["tutor_id"] = tutor_id
+
+        supabase.table("availabilities").insert(data).execute()
+        return 'Tutor availability created successfully'
+
+    async def create_tutor_unavailability(self, tutor_id: str, request: UnavailabilityHours) -> str:
+        data = request.model_dump(mode="json")
+        data["tutor_id"] = tutor_id
+
+        supabase.table("unavailabilities").insert(data).execute()
+        return 'Tutor unavailability created successfully'
+
+    # CRUD
+    async def create_availability(self, user_id: str, availability: AvailabilityHours) -> AvailabilityHours:
         """
         Create a new availability slot for a user.
 
@@ -22,9 +53,9 @@ class AvailabilitiesService:
 
         new_availability = await crud_provider.create(availability)
 
-        return Availability.model_validate(new_availability)
+        return AvailabilityHours.model_validate(new_availability)
 
-    async def get_availability(self, id: int, user_id: str) -> Availability:
+    async def get_availability(self, id: int, user_id: str) -> AvailabilityHours:
         """
         Retrieve a specific availability slot by ID for a given user.
 
@@ -37,9 +68,9 @@ class AvailabilitiesService:
         """
         availability = await crud_provider.get(id, user_id)
 
-        return Availability.model_validate(availability)
-    
-    async def get_all_availabilitise(self, user_id: str) -> list[Availability]:
+        return AvailabilityHours.model_validate(availability)
+
+    async def get_all_availabilitise(self, user_id: str) -> list[AvailabilityHours]:
         """
         Retrieve all availability slots for a given user.
 
@@ -51,9 +82,9 @@ class AvailabilitiesService:
         """
         availabilities = await crud_provider.get_all(user_id)
 
-        return [Availability.model_validate(a) for a in availabilities]
+        return [AvailabilityHours.model_validate(a) for a in availabilities]
 
-    async def update_availability(self, user_id, availability: Availability) -> Availability:
+    async def update_availability(self, user_id, availability: AvailabilityHours) -> AvailabilityHours:
         """
         Update an existing availability slot for a user.
 
@@ -66,9 +97,9 @@ class AvailabilitiesService:
         """
         updated_availability = await crud_provider.update(availability.model_dump(mode='json'), None, user_id)
 
-        return Availability.model_validate(updated_availability)
+        return AvailabilityHours.model_validate(updated_availability)
 
-    async def delete_availability(self, id: int, user_id: str) -> Availability:
+    async def delete_availability(self, id: int, user_id: str) -> AvailabilityHours:
         """
         Delete a specific availability slot for a given user.
 
@@ -81,4 +112,4 @@ class AvailabilitiesService:
         """
         deleted_availability = await crud_provider.delete(id, user_id)
 
-        return Availability.model_validate(deleted_availability)
+        return AvailabilityHours.model_validate(deleted_availability)

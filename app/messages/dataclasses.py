@@ -11,7 +11,7 @@ class UpsertSubject(BaseModel):
     class Config:
         from_attributes = True
 
+
 class Message(UpsertSubject):
     id: int
     sent_at: str
-

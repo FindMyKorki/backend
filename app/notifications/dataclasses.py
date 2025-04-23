@@ -14,4 +14,3 @@ class UpsertBooking(BaseModel):
 class Booking(UpsertBooking):
     id: int
     created_at: str
-

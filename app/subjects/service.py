@@ -1,12 +1,24 @@
+from core.db_connection import supabase
 from crud.crud_provider import CRUDProvider
-from .dataclasses import Subject, UpsertSubject
+from fastapi import HTTPException
+from subjects.dataclasses import Subject, CreateSubjectRequest
 
+from .dataclasses import Subject, UpsertSubject
 
 crud_provider = CRUDProvider("subjects")
 
 
-class SubjectService:
-    async def create_subject(self, subject: UpsertSubject, id: int = None) -> Subject:
+class SubjectsService:
+    async def get_subjects(self) -> list[Subject]:
+        subjects = supabase.table("subjects").select("*").execute()
+        return subjects.data
+
+    async def create_subject(self, create_subject_data: CreateSubjectRequest) -> str:
+        supabase.table("subjects").insert(create_subject_data.model_dump()).execute()
+        return 'Subject created successfully'
+
+    # CRUD
+    async def create_subject2(self, subject: UpsertSubject, id: int = None) -> Subject:
         new_subject = await crud_provider.create(subject.model_dump(), id)
 
         return Subject.model_validate(new_subject)
@@ -25,4 +37,3 @@ class SubjectService:
         deleted_subject = await crud_provider.delete(id)
 
         return Subject.model_validate(deleted_subject)
-

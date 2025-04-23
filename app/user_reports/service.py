@@ -1,14 +1,36 @@
-from .dataclasses import UserReport, CreateUserReport, UpdateUserReport
+from core.db_connection import supabase
 from crud.crud_provider import CRUDProvider
+from fastapi import HTTPException
 from profiles.service import crud_provider as profiles_crud_provider
 
+from .dataclasses import UserReport, CreateUserReport, CreateUserReport2, UpdateUserReport
 
 crud_provider = CRUDProvider('user_reports', 'user_id')
 
 
 class UserReportsService:
+    async def create_user_report(self, reported_user_id: str, report: CreateUserReport, reporter_id: str) -> str:
+        """Create a new user report"""
+        report_data = {
+            "user_id": reporter_id,
+            "reported_user_id": reported_user_id,
+            "reason": report.reason,
+            "message": report.message
+        }
 
-    async def create_user_report(self, user_id: str, user_report: CreateUserReport) -> UserReport:
+        result = (
+            supabase.table("user_reports")
+            .insert(report_data)
+            .execute()
+        )
+
+        if not result.data:
+            raise HTTPException(status_code=500, detail="Failed to create user report")
+
+        return f"User report created with ID: {result.data[0]['id']}"
+
+    # CRUD
+    async def create_user_report(self, user_id: str, user_report: CreateUserReport2) -> UserReport:
         """
         Create a new user report for a specific user.
 

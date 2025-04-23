@@ -1,6 +1,6 @@
 from core.db_connection import supabase
-from postgrest import SyncQueryRequestBuilder
 from fastapi import HTTPException
+from postgrest import SyncQueryRequestBuilder
 
 
 class CRUDException(Exception):

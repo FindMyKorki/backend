@@ -12,4 +12,3 @@ class UpsertBookingAttachment(BaseModel):
 class BookingAttachment(UpsertBookingAttachment):
     id: int
     created_at: str
-

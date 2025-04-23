@@ -6,10 +6,10 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 supabase: Client = create_client(
-    SUPABASE_URL, 
+    SUPABASE_URL,
     SUPABASE_KEY,
     options=ClientOptions(
         auto_refresh_token=False,
         persist_session=False
-        )
+    )
 )

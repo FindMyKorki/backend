@@ -1,6 +1,6 @@
 from crud.crud_provider import CRUDProvider
-from .dataclasses import Booking, UpsertBooking
 
+from .dataclasses import Booking, UpsertBooking
 
 crud_provider = CRUDProvider("notifications")
 
@@ -25,4 +25,3 @@ class NotificationService:
         deleted_notification = await crud_provider.delete(id)
 
         return Booking.model_validate(deleted_notification)
-
