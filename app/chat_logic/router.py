@@ -69,7 +69,7 @@ async def chat_websocket(websocket: WebSocket, chat_id: int):
 
             new_message = {
             "chat_id": chat_id,
-            "sender_id": message_data.get("sender_id"),
+            "sender_id": user_id,
             "content": message_data.get("content"),
             "is_media": message_data.get("is_media", False),
             "is_read": False,
