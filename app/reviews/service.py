@@ -22,7 +22,7 @@ class ReviewsService:
         )
 
         if response.data is None or len(response.data) == 0:
-            raise HTTPException(status_code=404, detail="Offer not found")
+            raise HTTPException(status_code=404, detail="No reviews found")
 
         return flatten_tutor_reviews_data(response.data)
 

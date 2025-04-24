@@ -15,7 +15,7 @@ class SubjectsService:
 
     async def create_subject(self, create_subject_data: CreateSubjectRequest) -> CreateSubjectRequest:
         result = supabase.table("subjects").insert(create_subject_data.model_dump()).execute()
-        return result.data
+        return result.data[0]
 
     # CRUD
     async def create_subject2(self, subject: UpsertSubject, id: int = None) -> Subject:

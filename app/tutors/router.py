@@ -28,7 +28,7 @@ async def create_tutor_profile(request: UpdateTutorProfile,
     Returns:
         str: Confirmation message or the ID of the newly created tutor profile.
     """
-    return await tutor_service.create_tutor_profile(request, _user_response.user.id)
+    return await tutors_service.create_tutor_profile(request, _user_response.user.id)
 
 
 @tutors_router.get('/tutors/{tutor_id}', response_model=TutorResponse)
@@ -42,4 +42,4 @@ async def get_tutor_profile(tutor_id: str = Path(...)) -> TutorResponse:
     Returns:
         TutorResponse: Full details of the tutor profile (bio, contact_email, phone_number, rating, featured_review_id, full_name, avatar_url).
     """
-    return await tutor_service.get_tutor_profile(tutor_id)
+    return await tutors_service.get_tutor_profile(tutor_id)

@@ -22,6 +22,7 @@ async def get_tutor_profile_data(tutor_id: str) -> TutorResponse:
 
 def flatten_tutor_data(tutor_data: {}) -> TutorResponse:
     return {
+        "id": tutor_data["id"],
         "bio": tutor_data["bio"],
         "bio_long": tutor_data["bio_long"],
         "rating": tutor_data["rating"],
