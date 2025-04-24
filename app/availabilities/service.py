@@ -22,19 +22,23 @@ class AvailabilityService:
 
         return response.data
 
-    async def create_tutor_availability(self, tutor_id: str, request: AvailabilityHours) -> str:
+    async def create_tutor_availability(self, tutor_id: str, request: AvailabilityHours) -> AvailabilityHours:
+        await _check_tutor_exists(tutor_id)
+
         data = request.model_dump(mode="json")
         data["tutor_id"] = tutor_id
 
-        supabase.table("availabilities").insert(data).execute()
-        return 'Tutor availability created successfully'
+        created_record = await crud_provider.create(data)
+        return created_record
 
-    async def create_tutor_unavailability(self, tutor_id: str, request: UnavailabilityHours) -> str:
+    async def create_tutor_unavailability(self, tutor_id: str, request: UnavailabilityHours) -> UnavailabilityHours:
+        await _check_tutor_exists(tutor_id)
+
         data = request.model_dump(mode="json")
         data["tutor_id"] = tutor_id
 
-        supabase.table("unavailabilities").insert(data).execute()
-        return 'Tutor unavailability created successfully'
+        created_record = supabase.table("unavailabilities").insert(data).execute()
+        return created_record
 
     # CRUD
     async def create_availability(self, user_id: str, availability: AvailabilityHours) -> AvailabilityHours:
@@ -113,3 +117,12 @@ class AvailabilityService:
         deleted_availability = await crud_provider.delete(id, user_id)
 
         return AvailabilityHours.model_validate(deleted_availability)
+
+    async def _check_tutor_exists(self, tutor_id: str):
+        crud_provider_tutor_profile = CRUDProvider('tutor_profiles', 'tutor_id')
+        try:
+            await crud_provider_tutor_profile.get(tutor_id)
+        except HTTPException as e:
+            if e.status_code == 502:
+                raise HTTPException(403, f"You are not a tutor!")
+            raise

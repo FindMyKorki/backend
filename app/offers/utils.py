@@ -80,4 +80,4 @@ def flatten_active_offers(data: list[dict]) -> list[ActiveOfferResponse]:
             )
         )
 
-        return result
+    return result

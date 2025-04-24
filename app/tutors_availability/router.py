@@ -16,6 +16,17 @@ async def get_tutor_available_hours(
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None
 ):
+    """
+    Retrieve the available hours for a specific tutor within a given date range.
+
+    Args:
+        tutor_id (str): The UUID of the tutor whose available hours are being requested.
+        start_date (Optional[datetime]): The start date for the availability range. Defaults to the current date and time if not provided.
+        end_date (Optional[datetime]): The end date for the availability range. Defaults to the end of the current month if not provided.
+
+    Returns:
+        TutorAvailabilityResponse: A response object containing the tutor's available hours within the specified date range.
+    """
     start_date = start_date or datetime.now(timezone.utc)
     end_date = end_date or get_end_of_current_month()
     return await tutors_availability_service.get_tutor_available_hours(tutor_id, start_date, end_date)

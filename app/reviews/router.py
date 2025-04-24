@@ -9,7 +9,7 @@ reviews_service = ReviewsService()
 
 
 @reviews_router.get("/tutor-reviews/{tutor_id}", response_model=list[TutorReviewResponse])
-async def get_tutor_reviews(tutor_id: str) -> list[TutorReviewResponse]:
+async def get_tutor_reviews(tutor_id: str = Path(...)) -> list[TutorReviewResponse]:
     """
     Retrieve all reviews for a specific tutor.
 

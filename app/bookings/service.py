@@ -26,6 +26,8 @@ def update_booking_is_paid(booking_id: int, is_paid: bool) -> str:
 
 class BookingsService:
     async def get_bookings_by_tutor(self, tutor_id: str) -> list[TutorBookingResponse]:
+        await self._check_tutor_exists(tutor_id)
+
         bookings_by_tutor = supabase.rpc('get_bookings_by_tutor_fix', {
             'tutor_uuid': str(tutor_id)
         }).execute()
@@ -33,11 +35,16 @@ class BookingsService:
         return bookings_by_tutor.data
 
     async def get_bookings_by_student(self, student_id: str) -> list[StudentBookingResponse]:
-        bookings_by_student = supabase.rpc('get_bookings_by_student_fix', {
-            'student_uuid': str(student_id)
-        }).execute()
-
-        return bookings_by_student.data
+        try:
+            await self._check_tutor_exists(student_id)
+        except HTTPException as e:
+            # if you are not a tutor, you are a student
+            if e.status_code == 403:
+                bookings_by_student = supabase.rpc('get_bookings_by_student_fix', {
+                    'student_uuid': str(student_id)
+                }).execute()
+                return bookings_by_student.data
+            raise HTTPException(403, f"You are not a student!")
 
     async def propose_booking(self, booking_data: ProposeBookingRequest, student_id: str) -> str:
         start_date = booking_data.start_date.isoformat()
@@ -59,9 +66,10 @@ class BookingsService:
 
         return 'Booking proposed successfully'
 
-    async def update_booking(self, booking_id: int, update_booking_data: UpdateBookingRequest) -> str:
+    async def update_booking(self, booking_id: int, user_id: str, update_booking_data: UpdateBookingRequest) -> str:
         check_if_booking_exists(booking_id)
-        # TODO: check if user requesting update is either student or tutor related to that booking
+        if not await self._check_if_user_is_student_or_tutor_for_booking(booking_id, user_id):
+            raise HTTPException(403, "Only the tutor or the student can mark this booking as rejected.")
 
         end_date = update_booking_data.end_date.isoformat()
         start_date = update_booking_data.start_date.isoformat()
@@ -76,29 +84,44 @@ class BookingsService:
         supabase.table("bookings").update(updated_booking.model_dump()).eq("id", booking_id).execute()
         return 'Booking updated successfully'
 
-    async def accept_booking(self, booking_id: int) -> str:
+    async def accept_booking(self, booking_id: int, user_id: str) -> str:
         check_if_booking_exists(booking_id)
-        # TODO: check if user accepting booking is the tutor related to that booking
+
+        if not await self._check_if_user_is_tutor_for_booking(booking_id, user_id):
+            raise HTTPException(403, "Only the tutor can mark this booking as accepted.")
+
         return update_booking_status(booking_id, "accepted")
 
-    async def reject_booking(self, booking_id: int) -> str:
+    async def reject_booking(self, booking_id: int, user_id: str) -> str:
         check_if_booking_exists(booking_id)
-        # TODO: check if user rejecting booking is the tutor related to that booking
+
+        if not await self._check_if_user_is_tutor_for_booking(booking_id, user_id):
+            raise HTTPException(403, "Only the tutor can mark this booking as rejected.")
+
         return update_booking_status(booking_id, "rejected")
 
-    async def cancel_booking(self, booking_id: int) -> str:
+    async def cancel_booking(self, booking_id: int, user_id: str) -> str:
         check_if_booking_exists(booking_id)
-        # TODO: check if user cancelling booking is either tutor or student related to that booking
+
+        if not await self._check_if_user_is_tutor_for_booking(booking_id, user_id):
+            raise HTTPException(403, "Only the tutor can mark this booking as canceled.")
+
         return update_booking_status(booking_id, "canceled")
 
-    async def mark_booking_paid(self, booking_id: int) -> str:
+    async def mark_booking_paid(self, booking_id: int, user_id: str) -> str:
         check_if_booking_exists(booking_id)
-        # TODO: check if user marking booking as paid is the tutor related to that booking
+
+        if not await self._check_if_user_is_tutor_for_booking(booking_id, user_id):
+            raise HTTPException(403, "Only the tutor can mark this booking as paid.")
+
         return update_booking_is_paid(booking_id, True)
 
-    async def mark_booking_unpaid(self, booking_id: int) -> str:
+    async def mark_booking_unpaid(self, booking_id: int, user_id: str) -> str:
         check_if_booking_exists(booking_id)
-        # TODO: check if user marking booking as unpaid is the tutor related to that booking
+
+        if not await self._check_if_user_is_tutor_for_booking(booking_id, user_id):
+            raise HTTPException(403, "Only the tutor can mark this booking as unpaid.")
+
         return update_booking_is_paid(booking_id, False)
 
     # CRUD
@@ -121,3 +144,42 @@ class BookingsService:
         deleted_booking = await crud_provider.delete(id)
 
         return Booking.model_validate(deleted_booking)
+
+    async def _check_if_user_is_tutor_for_booking(self, booking_id: int, user_id: str) -> bool:
+        """
+        Check if ``user_id`` is tutor related to that ``booking_id``.
+        """
+        booking = supabase.table("bookings").select("tutor_id").eq("id", booking_id).single().execute()
+
+        if not booking.data:
+            raise HTTPException(404, f"Booking with ID {booking_id} not found")
+
+        # Sprawdź, czy tutor ID w rezerwacji odpowiada user_id
+        if booking.data["tutor_id"] == user_id:
+            return True
+        else:
+            return False
+
+    async def _check_if_user_is_student_or_tutor_for_booking(self, booking_id: int, user_id: str) -> bool:
+        """
+        Check if ``user_id`` is either student or tutor related to that ``booking_id``.
+        """
+        booking = supabase.table("bookings").select("student_id", "offers(tutor_id)").eq("id", booking_id).single().execute()
+        if not booking.data:
+            raise HTTPException(404, f"Booking with ID {booking_id} not found")
+
+        student_id = booking.data["student_id"]
+        tutor_id = booking.data.get("offers", {}).get("tutor_id")
+        if student_id == user_id or tutor_id == user_id:
+            return True
+        else:
+            return False
+
+    async def _check_tutor_exists(self, tutor_id: str):
+        crud_provider_tutor_profile = CRUDProvider('tutor_profiles', 'tutor_id')
+        try:
+            await crud_provider_tutor_profile.get(tutor_id)
+        except HTTPException as e:
+            if e.status_code == 502:
+                raise HTTPException(403, f"You are not a tutor!")
+            raise

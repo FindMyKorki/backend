@@ -90,7 +90,7 @@ def generate_occurrences(start_date: datetime, end_date: datetime, recurrence_ru
                 new_month = ((current_date.month - 1 + months_to_add) % 12) + 1
                 new_year = current_date.year + (current_date.month - 1 + months_to_add) // 12
                 max_day = 30 if new_month in [4, 6, 9, 11] else 29 if new_month == 2 and (new_year % 4 == 0 and (
-                            new_year % 100 != 0 or new_year % 400 == 0)) else 28 if new_month == 2 else 31
+                        new_year % 100 != 0 or new_year % 400 == 0)) else 28 if new_month == 2 else 31
                 current_date = current_date.replace(year=new_year, month=new_month, day=min(current_date.day, max_day))
         while current_date <= until_date:
             if (not rule_dict.get('BYMONTHDAY') or str(current_date.day) in rule_dict['BYMONTHDAY']) and (
@@ -102,7 +102,7 @@ def generate_occurrences(start_date: datetime, end_date: datetime, recurrence_ru
             year = current_date.year + month // 12
             month = month % 12 + 1
             max_day = 30 if month in [4, 6, 9, 11] else 29 if month == 2 and (
-                        year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)) else 28 if month == 2 else 31
+                    year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)) else 28 if month == 2 else 31
             day = min(current_date.day, max_day)
             try:
                 current_date = current_date.replace(year=year, month=month, day=day)

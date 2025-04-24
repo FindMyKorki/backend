@@ -10,7 +10,7 @@ offers_service = OffersService()
 
 
 @offers_router.get("/offers/{offer_id}", response_model=OfferResponse)
-async def get_offer(offer_id: int) -> OfferResponse:
+async def get_offer(offer_id: int = Path(...)) -> OfferResponse:
     """
     Retrieve a specific offer by its ID
 
@@ -24,7 +24,7 @@ async def get_offer(offer_id: int) -> OfferResponse:
 
 
 @offers_router.put("/offers/{offer_id}", response_model=str)
-async def update_offer(offer_id: int, request: UpdateOfferRequest) -> str:
+async def update_offer(request: UpdateOfferRequest, offer_id: int = Path(...)) -> str:
     """
     Update the details of an existing offer.
 
@@ -39,7 +39,7 @@ async def update_offer(offer_id: int, request: UpdateOfferRequest) -> str:
 
 
 @offers_router.post("/offers/{offer_id}:disable", response_model=str)
-async def disable_offer(offer_id: int) -> str:
+async def disable_offer(offer_id: int = Path(...)) -> str:
     """
     Disable a specific offer, set `is_active` to False.
 
@@ -53,7 +53,7 @@ async def disable_offer(offer_id: int) -> str:
 
 
 @offers_router.post("/offers/{offer_id}:enable", response_model=str)
-async def enable_offer(offer_id: int) -> str:
+async def enable_offer(offer_id: int = Path(...)) -> str:
     """
     Enable a specific offer, set `is_active` to True.
 
@@ -67,7 +67,7 @@ async def enable_offer(offer_id: int) -> str:
 
 
 @offers_router.get("/tutor-offers/by-tutor/{tutor_id}", response_model=list[TutorOfferResponse])
-async def get_tutor_offers(tutor_id: str) -> list[TutorOfferResponse]:
+async def get_tutor_offers(tutor_id: str = Path(...)) -> list[TutorOfferResponse]:
     """
     Retrieve all offers related to a specific tutor.
 
@@ -81,7 +81,7 @@ async def get_tutor_offers(tutor_id: str) -> list[TutorOfferResponse]:
 
 
 @offers_router.get("/tutor-offers/by-id/{offer_id}", response_model=TutorOfferResponse)
-async def get_tutor_offer(offer_id: int) -> TutorOfferResponse:
+async def get_tutor_offer(offer_id: int = Path(...)) -> TutorOfferResponse:
     """
     Retrieve a detailed tutor offer by offer ID.
 
@@ -95,7 +95,7 @@ async def get_tutor_offer(offer_id: int) -> TutorOfferResponse:
 
 
 @offers_router.get("/active-offers/{tutor_id}", response_model=list[TutorOfferResponse])
-async def get_tutor_active_offer(tutor_id: str) -> list[TutorOfferResponse]:
+async def get_tutor_active_offer(tutor_id: str = Path(...)) -> list[TutorOfferResponse]:
     """
     Get a list of active offers for a specific tutor.
 
@@ -116,7 +116,7 @@ async def get_active_offers(
     """
     Retrieve a list of all active offers in the system, with sorting options.
 
-    Query Parameters:
+    Args:
         sort_by (SortBy): Field to sort offers by rating, price or name.
         order (Order): Sorting order increasing or decreasing.
 
