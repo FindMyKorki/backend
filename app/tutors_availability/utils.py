@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta, timezone
+import calendar
+from datetime import datetime, timedelta, timezone, date
 from typing import List, Tuple
 
 
@@ -180,3 +181,9 @@ async def generate_availability_blocks(availabilities, start_date: datetime, end
             print(f"Failed to generate availability blocks: {str(e)}")
             continue
     return merge_overlapping_blocks(blocks)
+
+
+def get_end_of_current_month() -> datetime:
+    today = date.today()
+    last_day = calendar.monthrange(today.year, today.month)[1]
+    return datetime(today.year, today.month, last_day, 23, 59, 59, tzinfo=timezone.utc)

@@ -3,21 +3,19 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-class OfferReport(BaseModel):
-    id: int
-    created_at: datetime
-    user_id: str
-    offer_id: int
-    reason: str
-    message: str
+class CreateOfferReport(BaseModel):
+    message: Optional[str] = ""
 
     class Config:
         from_attributes = True
 
 
-class CreateOfferReport(BaseModel):
+class OfferReport(CreateOfferReport):
+    id: int
     reason: str
-    message: str
+    created_at: datetime
+    user_id: str
+    offer_id: int
 
     class Config:
         from_attributes = True

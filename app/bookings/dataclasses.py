@@ -6,7 +6,7 @@ from typing import Optional
 class Booking(BaseModel):
     id: int
     offer_id: int
-    student_id: Optional[str]
+    student_id: str
     status: str  # "pending", "accepted", "canceled", "rejected"
     start_date: datetime
     end_date: datetime
@@ -18,59 +18,23 @@ class Booking(BaseModel):
         from_attributes = True
 
 
-class TutorBookingResponse(BaseModel):
-    id: int
-    subject: str
-    student_id: str
+class TutorBookingResponse(Booking):
+    subject_name: str
+    subject_icon_url: Optional[str]
     student_full_name: str
     avatar_url: str
-    start_date: datetime
-    end_date: datetime
-    created_at: datetime
-    status: str
-    is_paid: bool
-    notes: Optional[str]
 
     class Config:
         from_attributes = True
 
 
-class StudentBookingResponse(BaseModel):
-    id: int
-    subject: str
+class StudentBookingResponse(Booking):
+    subject_name: str
+    subject_icon_url: Optional[str]
     tutor_id: str
     tutor_full_name: str
     avatar_url: str
-    start_date: datetime
-    end_date: datetime
-    created_at: datetime
-    status: str
-    is_paid: bool
     price: float
-    notes: Optional[str]
-
-    class Config:
-        from_attributes = True
-
-
-class ProposeBookingRequest(BaseModel):
-    offer_id: int
-    start_date: datetime
-    end_date: datetime
-    notes: Optional[str] = ""
-
-    class Config:
-        from_attributes = True
-
-
-class ProposeBooking(BaseModel):
-    offer_id: int
-    student_id: str
-    start_date: str
-    end_date: str
-    notes: Optional[str]
-    status: str = 'pending'
-    is_paid: bool = False
 
     class Config:
         from_attributes = True
@@ -92,6 +56,25 @@ class UpdateBooking(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ProposeBookingRequest(UpdateBookingRequest):
+    offer_id: int
+
+    class Config:
+        from_attributes = True
+
+
+class ProposeBooking(ProposeBookingRequest):
+    student_id: str
+    start_date: str
+    end_date: str
+    status: str = 'pending'
+    is_paid: bool = False
+
+    class Config:
+        from_attributes = True
+
 
 
 class BookingCancelRequest(BaseModel):

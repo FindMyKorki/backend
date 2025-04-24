@@ -24,6 +24,7 @@ async def get_tutor_availabilities(tutor_id: str) -> list[AvailabilityHours]:
 
 @availabilities_router.post("/availabilities/{tutor_id}", response_model=str)
 async def create_tutor_availability(tutor_id: str, request: AvailabilityHours) -> str:
+    # TODO: should get tutor_id from auth header
     """
     Create a new availability time slot for a tutor
 
@@ -39,6 +40,7 @@ async def create_tutor_availability(tutor_id: str, request: AvailabilityHours) -
 
 @availabilities_router.post("/unavailabilities/{tutor_id}", response_model=str)
 async def create_tutor_unavailability(tutor_id: str, request: UnavailabilityHours) -> str:
+    # TODO: should get tutor_id from auth header
     """
     Create a new unavailability time slot for a tutor
 

@@ -3,7 +3,7 @@ from typing import Optional
 
 
 class BaseProfile(BaseModel):
-    full_name: Optional[str]
+    full_name: str
     is_tutor: bool
     avatar_url: Optional[str]
 

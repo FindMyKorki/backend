@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from users.auth import authenticate_user
 
-from .dataclasses import ChatWithLastMessage, MessageResponse, ChatReportRequest
+from .dataclasses import ChatWithLastMessage, Message, ChatReportRequest
 from .service import ChatsService
 
 chats_router = APIRouter(
@@ -25,7 +25,7 @@ async def get_student_chats(user_response=Depends(authenticate_user)):
     return await chats_service.get_student_chats(student_id)
 
 
-@chats_router.get("/{chat_id}/messages", response_model=MessageResponse)
+@chats_router.get("/{chat_id}/messages", response_model=list[Message])
 async def get_chat_messages(
         chat_id: int,
         user_response=Depends(authenticate_user)

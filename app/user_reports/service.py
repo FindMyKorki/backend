@@ -3,13 +3,13 @@ from crud.crud_provider import CRUDProvider
 from fastapi import HTTPException
 from profiles.service import crud_provider as profiles_crud_provider
 
-from .dataclasses import UserReport, CreateUserReport, CreateUserReport2, UpdateUserReport
+from .dataclasses import UserReport, CreateUserReport2, UpdateUserReport, CreateUserReportRequest
 
 crud_provider = CRUDProvider('user_reports', 'user_id')
 
 
 class UserReportsService:
-    async def create_user_report(self, reported_user_id: str, report: CreateUserReport, reporter_id: str) -> str:
+    async def create_user_report(self, reported_user_id: str, report: CreateUserReportRequest, reporter_id: str) -> str:
         """Create a new user report"""
         report_data = {
             "user_id": reporter_id,
@@ -30,7 +30,7 @@ class UserReportsService:
         return f"User report created with ID: {result.data[0]['id']}"
 
     # CRUD
-    async def create_user_report(self, user_id: str, user_report: CreateUserReport2) -> UserReport:
+    async def create_user_report2(self, user_id: str, user_report: CreateUserReport2) -> UserReport:
         """
         Create a new user report for a specific user.
 

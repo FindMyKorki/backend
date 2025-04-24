@@ -16,12 +16,6 @@ class Message(BaseModel):
         from_attributes = True
 
 
-class MessageResponse(BaseModel):
-    messages: List[Message]
-
-    class Config:
-        from_attributes = True
-
 
 class Chat(BaseModel):
     id: int

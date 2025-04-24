@@ -1,7 +1,7 @@
 from core.db_connection import supabase
 from fastapi import HTTPException
 
-from .dataclasses import ChatWithLastMessage, MessageResponse, ChatReportRequest
+from .dataclasses import ChatWithLastMessage, Message, ChatReportRequest
 
 
 class ChatsService:
@@ -37,7 +37,7 @@ class ChatsService:
             last_message = supabase.table("messages") \
                 .select("*") \
                 .eq("chat_id", chat["id"]) \
-                .order("created_at", desc=True) \
+                .order("sent_at", desc=True) \
                 .limit(1) \
                 .execute()
 
@@ -48,7 +48,7 @@ class ChatsService:
 
         return enriched_chats
 
-    async def get_chat_messages(self, chat_id: int) -> MessageResponse:
+    async def get_chat_messages(self, chat_id: int) -> list[Message]:
         """Get all messages for specific chat"""
         messages = supabase.table("messages") \
             .select("*") \
@@ -56,7 +56,7 @@ class ChatsService:
             .order("sent_at") \
             .execute()
 
-        return MessageResponse(messages=messages.data or [])
+        return messages.data or []
 
     async def report_chat(self, chat_id: int, user_id: str, request: ChatReportRequest) -> str:
         """Report a chat conversation"""

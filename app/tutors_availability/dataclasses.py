@@ -1,5 +1,4 @@
-import calendar
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone
 from pydantic import BaseModel, field_serializer
 from typing import Optional
 
@@ -14,12 +13,6 @@ class AvailableTimeBlock(BaseModel):
 
     class Config:
         from_attributes = True
-
-
-def get_end_of_current_month() -> datetime:
-    today = date.today()
-    last_day = calendar.monthrange(today.year, today.month)[1]
-    return datetime(today.year, today.month, last_day, 23, 59, 59, tzinfo=timezone.utc)
 
 
 class TutorAvailabilityResponse(BaseModel):

@@ -2,8 +2,9 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Path
 from typing import Optional
 
-from .dataclasses import TutorAvailabilityResponse, get_end_of_current_month
+from .dataclasses import TutorAvailabilityResponse
 from .service import TutorsAvailabilityService
+from .utils import get_end_of_current_month
 
 tutors_availability_router = APIRouter()
 tutors_availability_service = TutorsAvailabilityService()

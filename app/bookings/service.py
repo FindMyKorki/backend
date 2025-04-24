@@ -26,14 +26,14 @@ def update_booking_is_paid(booking_id: int, is_paid: bool) -> str:
 
 class BookingsService:
     async def get_bookings_by_tutor(self, tutor_id: str) -> list[TutorBookingResponse]:
-        bookings_by_tutor = supabase.rpc('get_bookings_by_tutor', {
+        bookings_by_tutor = supabase.rpc('get_bookings_by_tutor_fix', {
             'tutor_uuid': str(tutor_id)
         }).execute()
 
         return bookings_by_tutor.data
 
     async def get_bookings_by_student(self, student_id: str) -> list[StudentBookingResponse]:
-        bookings_by_student = supabase.rpc('get_bookings_by_student', {
+        bookings_by_student = supabase.rpc('get_bookings_by_student_fix', {
             'student_uuid': str(student_id)
         }).execute()
 

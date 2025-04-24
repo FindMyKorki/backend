@@ -4,9 +4,9 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-class CreateUserReport(BaseModel):
+class CreateUserReportRequest(BaseModel):
     reason: str
-    message: str
+    message: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -20,14 +20,15 @@ class BaseUserReport(BaseModel):
         from_attributes = True
 
 
-class UserReport(BaseUserReport):
+class UserReport(CreateUserReportRequest):
     id: int
     reported_user: Profile
+    created_at: datetime
 
 
 class CreateUserReport2(BaseUserReport):
     reported_user_id: str
 
 
-class UpdateUserReport(CreateUserReport):
+class UpdateUserReport(CreateUserReportRequest):
     id: int
