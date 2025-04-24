@@ -23,7 +23,7 @@ class AvailabilityService:
         return response.data
 
     async def create_tutor_availability(self, tutor_id: str, request: AvailabilityHours) -> AvailabilityHours:
-        await _check_tutor_exists(tutor_id)
+        await self._check_tutor_exists(tutor_id)
 
         data = request.model_dump(mode="json")
         data["tutor_id"] = tutor_id
@@ -32,13 +32,13 @@ class AvailabilityService:
         return created_record
 
     async def create_tutor_unavailability(self, tutor_id: str, request: UnavailabilityHours) -> UnavailabilityHours:
-        await _check_tutor_exists(tutor_id)
+        await self._check_tutor_exists(tutor_id)
 
         data = request.model_dump(mode="json")
         data["tutor_id"] = tutor_id
 
         created_record = supabase.table("unavailabilities").insert(data).execute()
-        return created_record
+        return created_record.data[0]
 
     # CRUD
     async def create_availability(self, user_id: str, availability: AvailabilityHours) -> AvailabilityHours:

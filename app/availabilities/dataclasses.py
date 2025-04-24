@@ -12,4 +12,4 @@ class UnavailabilityHours(BaseModel):
 
 
 class AvailabilityHours(UnavailabilityHours):
-    recurrence_rule: Optional[str]
+    recurrence_rule: Optional[str] = None
