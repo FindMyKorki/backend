@@ -44,7 +44,7 @@ class BookingsService:
                     'student_uuid': str(student_id)
                 }).execute()
                 return bookings_by_student.data
-            raise HTTPException(403, f"You are not a student!")
+        raise HTTPException(403, f"You are not a student!")
 
     async def propose_booking(self, booking_data: ProposeBookingRequest, student_id: str) -> str:
         start_date = booking_data.start_date.isoformat()
@@ -149,13 +149,13 @@ class BookingsService:
         """
         Check if ``user_id`` is tutor related to that ``booking_id``.
         """
-        booking = supabase.table("bookings").select("tutor_id").eq("id", booking_id).single().execute()
+        booking = supabase.table("bookings").select("offers(tutor_id)").eq("id", booking_id).single().execute()
 
         if not booking.data:
             raise HTTPException(404, f"Booking with ID {booking_id} not found")
 
         # Sprawdź, czy tutor ID w rezerwacji odpowiada user_id
-        if booking.data["tutor_id"] == user_id:
+        if booking.data.get("offers", {}).get("tutor_id") == user_id:
             return True
         else:
             return False
