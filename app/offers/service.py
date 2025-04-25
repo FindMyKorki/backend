@@ -40,7 +40,10 @@ class OffersService:
 
         return flatten_offer_data(response.data[0])
 
-    async def update_offer(self, offer_id: int, request: UpdateOfferRequest) -> str:
+    async def update_offer(self, offer_id: int, request: UpdateOfferRequest, tutor_id: str) -> str:
+        await self._check_tutor_exists(tutor_id)
+        await self._check_tutor_owns_offer(tutor_id, offer_id)
+
         service = OffersService()
         offer = await service.get_offer(offer_id)
 
@@ -60,7 +63,10 @@ class OffersService:
 
         return f"Offer id:{offer.id} updated"
 
-    async def disable_enable_offer(self, offer_id: int, is_active: bool) -> str:
+    async def disable_enable_offer(self, offer_id: int, is_active: bool, tutor_id: str) -> str:
+        await self._check_tutor_exists(tutor_id)
+        await self._check_tutor_owns_offer(tutor_id, offer_id)
+
         service = OffersService()
         offer = await service.get_offer(offer_id)
 
@@ -77,6 +83,8 @@ class OffersService:
         return f"Offer id: {offer.id} {"enabled" if is_active else "disabled"}"
 
     async def get_tutor_offers(self, tutor_id: str) -> list[TutorOfferResponse]:
+        await self._check_tutor_exists(tutor_id)
+
         offers = (
             supabase
             .table("offers")
@@ -90,7 +98,9 @@ class OffersService:
 
         return flatten_tutor_offers_data(offers.data)
 
-    async def get_tutor_offer(self, offer_id: int) -> TutorOfferResponse:
+    async def get_tutor_offer(self, offer_id: int, tutor_id: str) -> TutorOfferResponse:
+        await self._check_tutor_exists(tutor_id)
+
         offers = (
             supabase
             .table("offers")
@@ -119,7 +129,6 @@ class OffersService:
 
         return flatten_tutor_offers_data(offers.data)
 
-    # do poprawy
     async def get_active_offers(self, sort_by: str, order: str) -> list[ActiveOfferResponse]:
         order_map = {
             SortBy.rating: ("rating", "tutor_profiles"),
@@ -257,3 +266,28 @@ class OffersService:
             except:
                 # Object already exists
                 pass
+
+    async def _check_tutor_exists(self, tutor_id: str):
+        crud_provider_tutor_profile = CRUDProvider('tutor_profiles', 'tutor_id')
+        try:
+            await crud_provider_tutor_profile.get(tutor_id)
+        except HTTPException as e:
+            if e.status_code == 502:
+                raise HTTPException(403, f"You are not a tutor!")
+            raise
+
+    async def _check_tutor_owns_offer(self, tutor_id: str, offer_id: str):
+        crud_offer = CRUDProvider('offers', 'tutor_id')
+
+        try:
+            offer = await crud_offer.get(offer_id)
+        except HTTPException as e:
+            if e.status_code == 404:
+                raise HTTPException(404, f"Offer with id {offer_id} not found.")
+            elif e.status_code == 502:
+                raise HTTPException(502, "No response from query when checking offer.")
+            else:
+                raise
+
+        if offer.get('tutor_id') != tutor_id:
+            raise HTTPException(403, f"This tutor does not own this offer.")
