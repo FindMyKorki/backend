@@ -16,6 +16,7 @@ from tutors_availability.router import tutors_availability_router
 from typing import List
 from user_reports.router import user_reports_router
 from users.router import users_router
+from booking_attachments.router import attachments_router
 
 
 class Router:
@@ -42,4 +43,5 @@ registered_routers: List[Router] = [
     Router(router=user_reports_router, tag="User Reports"),
     Router(router=offer_reports_router, tag="Offer Reports"),
     Router(router=test_lessons_router, tag="Test Lessons"),
+    Router(router=attachments_router, tag="Booking Attachments")
 ]

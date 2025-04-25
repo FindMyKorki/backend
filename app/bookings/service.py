@@ -1,11 +1,17 @@
+from typing import Optional, List
+
 from core.db_connection import supabase
 from crud.crud_provider import CRUDProvider
-from fastapi import HTTPException
+from fastapi import HTTPException, Form, UploadFile
+from pydantic import ValidationError
 
 from .dataclasses import Booking, UpsertBooking, TutorBookingResponse, StudentBookingResponse, ProposeBooking, \
     ProposeBookingRequest, UpdateBooking, UpdateBookingRequest
+from booking_attachments.service import BookingAttachmentService
+from booking_attachments.dataclasses import UpsertBookingAttachment
 
 crud_provider = CRUDProvider("bookings")
+booking_attachments_service = BookingAttachmentService()
 
 
 def check_if_booking_exists(booking_id: int) -> None | HTTPException:
@@ -66,19 +72,47 @@ class BookingsService:
 
         return 'Booking proposed successfully'
 
-    async def update_booking(self, booking_id: int, user_id: str, update_booking_data: UpdateBookingRequest) -> str:
+    async def update_booking(self, booking_id: int, user_id: str, update_booking_data: UpdateBookingRequest, files: Optional[List[UploadFile]] = None) -> str:
+
         check_if_booking_exists(booking_id)
         if not await self._check_if_user_is_student_or_tutor_for_booking(booking_id, user_id):
             raise HTTPException(403, "Only the tutor or the student can mark this booking as rejected.")
 
-        end_date = update_booking_data.end_date.isoformat()
-        start_date = update_booking_data.start_date.isoformat()
-        if end_date < start_date:
-            raise HTTPException(400, 'End date must be greater than start date')
+        # attachments upload logic
+        if files:
+            files_data = await booking_attachments_service.upload_files(booking_id, files)
+            for file_data in files_data:
+                # It would be great to push all of them in a single query, dont know how to do it yet tho
+                attachment = UpsertBookingAttachment(
+                    booking_id=booking_id,
+                    attachment_url=f"https://hhjkqjgbydjfjbfutpwj.supabase.co/storage/v1/object/public/{file_data.full_path}"
+                )
+                supabase.table("booking_attachments").insert(attachment.model_dump()).execute()
+
+        # attachments removal logic
+        if update_booking_data.remove_files:
+            # Generates a structure that looks like (id1, id2, ..., idn)
+            tmp = "("
+            for id in update_booking_data.remove_files:
+                tmp += f"{id},"
+            idfilter = tmp[0:-1] + ")"
+
+            # fetch attachments that are in the list
+            attachments = supabase.table("booking_attachments").select("*").filter("id", "in", idfilter).execute()
+            if len(attachments.data) == 0: raise HTTPException(400, "Attachments selected for deletion do not exist")
+
+            attachments = attachments.data
+
+            delete_paths = []
+            for attachment in attachments:
+                filepath = attachment.get("attachment_url").split("https://hhjkqjgbydjfjbfutpwj.supabase.co/storage/v1/object/public/attachments/")[1]
+                delete_paths.append(filepath)
+
+            _ = supabase.storage.from_("attachments").remove(delete_paths)
+
+            _ = supabase.table("booking_attachments").delete().filter("id", "in", idfilter).execute()
 
         updated_booking = UpdateBooking(
-            start_date=start_date,
-            end_date=end_date,
             notes=update_booking_data.notes,
         )
         supabase.table("bookings").update(updated_booking.model_dump()).eq("id", booking_id).execute()
@@ -183,3 +217,14 @@ class BookingsService:
             if e.status_code == 502:
                 raise HTTPException(403, f"You are not a tutor!")
             raise
+
+# Some weird thing specific to fastAPI
+# it's required to send both standard data (in our case notes and remove_files
+# and files in one single request using form
+async def _parse_from_request(notes: Optional[str] = Form(None),
+                                remove_files: Optional[List[str]] = Form(None)) -> UpdateBookingRequest:
+
+    try:
+        return UpdateBookingRequest(notes=notes, remove_files=remove_files)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=e.errors())

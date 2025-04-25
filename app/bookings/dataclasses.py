@@ -1,6 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Annotated
+from fastapi import File, UploadFile
 
 
 class Booking(BaseModel):
@@ -41,18 +42,16 @@ class StudentBookingResponse(Booking):
 
 
 class UpdateBookingRequest(BaseModel):
-    start_date: datetime
-    end_date: datetime
-    notes: Optional[str]
+    notes: Optional[str] = None
+    # left remove_files id's as a string, as fastapi struggles while parsing int input from form
+    remove_files: Optional[List[str]] = None
 
     class Config:
         from_attributes = True
 
 
 class UpdateBooking(BaseModel):
-    start_date: str
-    end_date: str
-    notes: Optional[str]
+    notes: Optional[str] = None
 
     class Config:
         from_attributes = True

@@ -1,9 +1,13 @@
+from typing import Annotated, Optional, List
+
 from bookings.dataclasses import TutorBookingResponse, UpdateBookingRequest, ProposeBookingRequest, \
     StudentBookingResponse
 from bookings.service import BookingsService
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Depends, Path, Form, UploadFile, File
 from gotrue.types import UserResponse
 from users.auth import authenticate_user
+
+from bookings.service import _parse_from_request
 
 bookings_router = APIRouter()
 bookings_service = BookingsService()
@@ -38,9 +42,10 @@ async def get_bookings(_user_response: UserResponse = Depends(authenticate_user)
 
 
 @bookings_router.put("/bookings/{booking_id}", response_model=str)
-async def update_booking(booking_data: UpdateBookingRequest,
-                         booking_id: int = Path(...),
-                         _user_response: UserResponse = Depends(authenticate_user)):
+async def update_booking(files: List[UploadFile] = None,
+                        booking_data: UpdateBookingRequest = Depends(_parse_from_request),
+                        booking_id: int = Path(...),
+                        _user_response: UserResponse = Depends(authenticate_user)):
     """
     Update the details of an existing booking.
 
@@ -52,7 +57,7 @@ async def update_booking(booking_data: UpdateBookingRequest,
     Returns:
         str: A confirmation message indicating the booking was successfully updated.
     """
-    return await bookings_service.update_booking(booking_id, _user_response.user.id, booking_data)
+    return await bookings_service.update_booking(booking_id, _user_response.user.id, booking_data, files)
 
 
 @bookings_router.post("/bookings:propose", response_model=str)
