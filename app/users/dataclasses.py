@@ -68,6 +68,7 @@ class MyUserResponse(BaseModel):
     id: str
     provider_email: str
     provider_display_name: str
+    provider_avatar_url: Optional[str] = None
     profile: Optional[MyProfileResponse] = None
     tutor_profile: Optional[MyTutorProfileResponse] = None
 
