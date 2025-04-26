@@ -79,7 +79,7 @@ class BookingsService:
             raise HTTPException(403, "Only the tutor or the student can mark this booking as rejected.")
 
         # attachments upload logic
-        if files:
+        if files and files[0].size != 0:
             files_data = await booking_attachments_service.upload_files(booking_id, files)
             for file_data in files_data:
                 # It would be great to push all of them in a single query, dont know how to do it yet tho
@@ -90,7 +90,7 @@ class BookingsService:
                 supabase.table("booking_attachments").insert(attachment.model_dump()).execute()
 
         # attachments removal logic
-        if update_booking_data.remove_files:
+        if update_booking_data.remove_files and update_booking_data.remove_files[0] != "":
             # Generates a structure that looks like (id1, id2, ..., idn)
             tmp = "("
             for id in update_booking_data.remove_files:
