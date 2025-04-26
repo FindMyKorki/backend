@@ -76,7 +76,7 @@ class BookingAttachmentService:
         for file in files:
             file_data = await file.read()
             filename = str(uuid.uuid4())
-            path = f"{booking_id}/${filename}"  # TODO: provide unique pathname
+            path = f"{booking_id}/${filename}"
             res = (supabase.storage
                    .from_("attachments")
                    .upload(file=file_data, path=path,

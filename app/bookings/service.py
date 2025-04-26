@@ -1,3 +1,4 @@
+import os
 from typing import Optional, List
 
 from core.db_connection import supabase
@@ -9,6 +10,9 @@ from .dataclasses import Booking, UpsertBooking, TutorBookingResponse, StudentBo
     ProposeBookingRequest, UpdateBooking, UpdateBookingRequest
 from booking_attachments.service import BookingAttachmentService
 from booking_attachments.dataclasses import UpsertBookingAttachment
+
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
 
 crud_provider = CRUDProvider("bookings")
 booking_attachments_service = BookingAttachmentService()
@@ -85,7 +89,7 @@ class BookingsService:
                 # It would be great to push all of them in a single query, dont know how to do it yet tho
                 attachment = UpsertBookingAttachment(
                     booking_id=booking_id,
-                    attachment_url=f"https://hhjkqjgbydjfjbfutpwj.supabase.co/storage/v1/object/public/{file_data.full_path}"
+                    attachment_url=f"{SUPABASE_URL}/storage/v1/object/public/{file_data.full_path}"
                 )
                 supabase.table("booking_attachments").insert(attachment.model_dump()).execute()
 
@@ -105,7 +109,7 @@ class BookingsService:
 
             delete_paths = []
             for attachment in attachments:
-                filepath = attachment.get("attachment_url").split("https://hhjkqjgbydjfjbfutpwj.supabase.co/storage/v1/object/public/attachments/")[1]
+                filepath = attachment.get("attachment_url").split(f"{SUPABASE_URL}/storage/v1/object/public/attachments/")[1]
                 delete_paths.append(filepath)
 
             _ = supabase.storage.from_("attachments").remove(delete_paths)
