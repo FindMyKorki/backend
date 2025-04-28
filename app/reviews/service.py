@@ -1,5 +1,6 @@
 from core.db_connection import supabase
 from crud.crud_provider import CRUDProvider
+from enum import Enum
 from fastapi import HTTPException
 
 from .dataclasses import TutorReviewResponse, Review, UpsertReview
@@ -8,8 +9,29 @@ from .utils import flatten_tutor_reviews_data
 crud_provider = CRUDProvider("reviews")
 
 
+class SortBy(str, Enum):
+    rating = "rating"
+    date = "date"
+
+
+class Order(str, Enum):
+    increasing = "increasing"
+    decreasing = "decreasing"
+
+
 class ReviewsService:
-    async def get_tutor_reviews(self, tutor_id: str) -> list[TutorReviewResponse]:
+    async def get_tutor_reviews(self, tutor_id: str, sort_by: str, order: str) -> list[TutorReviewResponse]:
+        order_map = {
+            SortBy.rating: "rating",
+            SortBy.date: "created_at"
+        }
+
+        if sort_by not in order_map:
+            raise HTTPException(status_code=400, detail="Invalid sort_by value")
+
+        column = order_map[sort_by]
+        sort_desc = order == Order.decreasing
+
         response = (
             supabase
             .table("reviews")
@@ -18,6 +40,7 @@ class ReviewsService:
                 "profiles(full_name, avatar_url))"
             )
             .eq("tutor_id", tutor_id)
+            .order(column, desc=sort_desc)
             .execute()
         )
 
