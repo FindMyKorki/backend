@@ -6,7 +6,7 @@ from .utils import get_tutor_profile_data
 
 
 class TutorsService:
-    async def update_tutor_profile(self, tutor_id: str, request: UpdateTutorProfile) -> TutorProfile:
+    async def update_tutor_profile(self, tutor_id: str, request: UpdateTutorProfile) -> TutorResponse:
         """Update tutor profile information"""
         # Check if tutor profile exists
         tutor_profile = await get_tutor_profile_data(tutor_id)
