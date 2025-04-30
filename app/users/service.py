@@ -1,13 +1,13 @@
 import os
+from core.db_connection import supabase, SUPABASE_KEY, SUPABASE_URL
+from fastapi import HTTPException, Request
+from fastapi.responses import RedirectResponse
+from profiles.utils import get_profile_data
+from supabase import AuthApiError, create_client, Client
 
 from .dataclasses import CodeForSessionResponse, TokensResponse, RefreshTokensRequest, SignInResponse, CallbackResponse, \
     CreateUserRequest, UserResponse, UpdateUserRequest, MyUserResponse, MyProfileResponse, MyTutorProfileResponse, \
     FeaturedReview
-from profiles.utils import get_profile_data
-from core.db_connection import supabase, SUPABASE_KEY, SUPABASE_URL
-from fastapi import HTTPException, Request
-from fastapi.responses import RedirectResponse
-from supabase import AuthApiError, create_client, Client
 
 
 class UsersService:
@@ -89,7 +89,7 @@ class UsersService:
 
         except AuthApiError as e:
             raise HTTPException(status_code=401, detail=e.message)
-    
+
     async def create_user(self, request: CreateUserRequest) -> UserResponse:
         """Create a new user"""
         try:
@@ -99,14 +99,14 @@ class UsersService:
                 "password": request.password,
                 "email_confirm": True  # Auto-confirm the email
             })
-            
+
             user_id = user.user.id
-            
+
             # If avatar_url is provided, create/update profile record
             if request.avatar_url:
                 # Check if profile exists first
                 profile_data = await get_profile_data(user_id)
-                
+
                 if profile_data:
                     # Update existing profile
                     supabase.table("profiles").update({
@@ -118,14 +118,14 @@ class UsersService:
                         "id": user_id,
                         "avatar_url": request.avatar_url
                     }).execute()
-            
+
             return UserResponse(
                 id=user.user.id,
                 email=user.user.email,
                 created_at=user.user.created_at,
                 avatar_url=request.avatar_url
             )
-            
+
         except AuthApiError as e:
             raise HTTPException(status_code=400, detail=e.message)
 
@@ -134,19 +134,19 @@ class UsersService:
             id = user_response.user.id
 
             user = MyUserResponse(
-                id = id,
-                provider_email = user_response.user.user_metadata.get("email"),
-                provider_avatar_url = user_response.user.user_metadata.get("avatar_url"),
-                provider_display_name = user_response.user.user_metadata.get("full_name")
+                id=id,
+                provider_email=user_response.user.user_metadata.get("email"),
+                provider_avatar_url=user_response.user.user_metadata.get("avatar_url"),
+                provider_display_name=user_response.user.user_metadata.get("full_name")
             )
 
             profile = await get_profile_data(id)
 
             if profile:
                 user.profile = MyProfileResponse(
-                    full_name = profile.get("full_name"),
-                    is_tutor = profile.get("is_tutor"),
-                    avatar_url = profile.get("avatar_url")
+                    full_name=profile.get("full_name"),
+                    is_tutor=profile.get("is_tutor"),
+                    avatar_url=profile.get("avatar_url")
                 )
 
                 if profile.get("is_tutor"):
@@ -161,24 +161,22 @@ class UsersService:
                     if not tutor_profile.data or len(tutor_profile.data) == 0:
                         return user
 
-
                     user.tutor_profile = MyTutorProfileResponse(
-                            bio = tutor_profile.data[0].get("bio"),
-                            bio_long = tutor_profile.data[0].get("bio_long"),
-                            rating = tutor_profile.data[0].get("rating"),
-                            contact_email = tutor_profile.data[0].get("contact_email"),
-                            phone_number = tutor_profile.data[0].get("phone_number"),
+                        bio=tutor_profile.data[0].get("bio"),
+                        bio_long=tutor_profile.data[0].get("bio_long"),
+                        rating=tutor_profile.data[0].get("rating"),
+                        contact_email=tutor_profile.data[0].get("contact_email"),
+                        phone_number=tutor_profile.data[0].get("phone_number"),
                     )
 
                     if not tutor_profile.data[0].get("featured_review_id"):
                         return user
 
-
                     user.tutor_profile.featured_review = FeaturedReview(
-                        id = tutor_profile.data[0].get("reviews").get("id"),
-                        comment = tutor_profile.data[0].get("reviews").get("comment"),
-                        rating = tutor_profile.data[0].get("reviews").get("rating"),
-                        student_id = tutor_profile.data[0].get("reviews").get("student_id")
+                        id=tutor_profile.data[0].get("reviews").get("id"),
+                        comment=tutor_profile.data[0].get("reviews").get("comment"),
+                        rating=tutor_profile.data[0].get("reviews").get("rating"),
+                        student_id=tutor_profile.data[0].get("reviews").get("student_id")
                     )
 
             return user
@@ -190,21 +188,21 @@ class UsersService:
         """Get user by ID"""
         try:
             user = supabase.auth.admin.get_user_by_id(user_id)
-            
+
             # Get profile data to fetch avatar_url
             profile = await get_profile_data(user_id)
             avatar_url = profile.avatar_url if profile else None
-            
+
             return UserResponse(
                 id=user.user.id,
                 email=user.user.email,
                 created_at=user.user.created_at,
                 avatar_url=avatar_url
             )
-            
+
         except AuthApiError as e:
             raise HTTPException(status_code=404, detail="User not found")
-    
+
     async def update_user(self, user_id: str, request: UpdateUserRequest) -> UserResponse:
         """Update user information"""
         try:
@@ -249,23 +247,23 @@ class UsersService:
             if "not found" in str(e).lower():
                 raise HTTPException(status_code=404, detail="User not found")
             raise HTTPException(status_code=400, detail=str(e))
-    
+
     async def delete_user(self, user_id: str) -> str:
         """Delete a user by ID"""
         try:
             # Check if user exists
             supabase.auth.admin.get_user_by_id(user_id)
-            
+
             # Delete user
             supabase.auth.admin.delete_user(user_id)
-            
+
             return f"User {user_id} has been deleted"
-            
+
         except AuthApiError as e:
             if "not found" in str(e).lower():
                 raise HTTPException(status_code=404, detail="User not found")
             raise HTTPException(status_code=400, detail=str(e))
-    
+
     def _create_client(self) -> Client:
         return create_client(
             SUPABASE_URL,

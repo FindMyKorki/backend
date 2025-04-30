@@ -1,7 +1,8 @@
-from pydantic import BaseModel, EmailStr
-from profiles.dataclasses import Profile
 from gotrue import OAuthResponse
+from profiles.dataclasses import Profile
+from pydantic import BaseModel, EmailStr
 from typing import Optional
+
 
 class TokensResponse(BaseModel):
     access_token: str
@@ -40,16 +41,19 @@ class CallbackResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class MyProfileResponse(BaseModel):
     full_name: Optional[str] = None
     avatar_url: Optional[str] = None
     is_tutor: bool
+
 
 class FeaturedReview(BaseModel):
     id: int
     rating: Optional[float] = None
     comment: str
     student_id: str
+
 
 class MyTutorProfileResponse(BaseModel):
     bio: Optional[str] = None
@@ -64,6 +68,7 @@ class MyUserResponse(BaseModel):
     id: str
     provider_email: str
     provider_display_name: str
+    provider_avatar_url: Optional[str] = None
     profile: Optional[MyProfileResponse] = None
     tutor_profile: Optional[MyTutorProfileResponse] = None
 
@@ -85,7 +90,8 @@ class UpdateUserRequest(BaseModel):
 
     class Config:
         from_attributes = True
-        
+
+
 class CreateUserRequest(BaseModel):
     email: EmailStr
     password: str

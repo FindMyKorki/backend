@@ -32,7 +32,11 @@ class TutorProfile(UpdateTutorProfile):
 class TutorResponse(UpdateTutorProfile):
     rating: float
     featured_review_id: Optional[int] = None
+    featured_review_student_id: Optional[str] = None
+    featured_review_student_fullname: Optional[str] = None
+    featured_review_student_avatar_url: Optional[str] = None
     featured_review_rating: Optional[float] = None
     featured_review_comment: Optional[str] = None
     full_name: Optional[str] = None
     avatar_url: Optional[str] = None
+    reviews_count: int

@@ -1,5 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel
+from typing import Optional
 
 
 class UnavailabilityHours(BaseModel):
@@ -11,4 +12,4 @@ class UnavailabilityHours(BaseModel):
 
 
 class AvailabilityHours(UnavailabilityHours):
-    recurrence_rule: str
+    recurrence_rule: Optional[str] = None

@@ -1,10 +1,11 @@
+import logging
+from core.db_connection import supabase
 from datetime import datetime, timedelta, timezone
 from typing import List, Tuple
-import logging
 
-from core.db_connection import supabase
 from .dataclasses import AvailableTimeBlock, TutorAvailabilityResponse
-from .utils import subtract_time_blocks, standardize_datetime, generate_occurrences, merge_overlapping_blocks, parse_datetime, generate_availability_blocks
+from .utils import subtract_time_blocks, standardize_datetime, generate_occurrences, merge_overlapping_blocks, \
+    parse_datetime, generate_availability_blocks
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +13,8 @@ logger = logging.getLogger(__name__)
 class TutorsAvailabilityService:
     MIN_BLOCK_DURATION_MINUTES = 45
 
-    async def get_tutor_available_hours(self, tutor_id: str, start_date: datetime, end_date: datetime) -> TutorAvailabilityResponse:
+    async def get_tutor_available_hours(self, tutor_id: str, start_date: datetime,
+                                        end_date: datetime) -> TutorAvailabilityResponse:
         try:
             if start_date > end_date:
                 raise ValueError("start_date must be before end_date")
@@ -27,8 +29,6 @@ class TutorsAvailabilityService:
             availabilities = await self._get_tutor_availabilities(tutor_id)
             unavailabilities = await self._get_tutor_unavailabilities(tutor_id, start_date, end_date)
             bookings = await self._get_tutor_confirmed_bookings(tutor_id, start_date, end_date)
-
-
 
             availability_blocks = await generate_availability_blocks(availabilities, start_date, end_date)
 
@@ -70,9 +70,11 @@ class TutorsAvailabilityService:
 
     async def _get_tutor_availabilities(self, tutor_id: str):
         try:
-            recurring = supabase.table("availabilities").select("*").eq("tutor_id", tutor_id).not_.is_("recurrence_rule", "null").not_.eq("recurrence_rule", "").execute()
+            recurring = supabase.table("availabilities").select("*").eq("tutor_id", tutor_id).not_.is_(
+                "recurrence_rule", "null").not_.eq("recurrence_rule", "").execute()
             current_time = datetime.now(timezone.utc).isoformat()
-            nonrecurring = supabase.table("availabilities").select("*").eq("tutor_id", tutor_id).or_(f"recurrence_rule.is.null,recurrence_rule.eq.").gte("end_time", current_time).execute()
+            nonrecurring = supabase.table("availabilities").select("*").eq("tutor_id", tutor_id).or_(
+                f"recurrence_rule.is.null,recurrence_rule.eq.").gte("end_time", current_time).execute()
             availabilities = recurring.data + nonrecurring.data
             return [
                 a for a in availabilities
@@ -84,7 +86,9 @@ class TutorsAvailabilityService:
 
     async def _get_tutor_unavailabilities(self, tutor_id: str, start_date: datetime, end_date: datetime):
         try:
-            unavailabilities = supabase.table("unavailabilities").select("*").eq("tutor_id", tutor_id).gte("start_time", start_date.isoformat()).lte("end_time", end_date.isoformat()).execute()
+            unavailabilities = supabase.table("unavailabilities").select("*").eq("tutor_id", tutor_id).gte("start_time",
+                                                                                                           start_date.isoformat()).lte(
+                "end_time", end_date.isoformat()).execute()
             return [
                 u for u in unavailabilities.data
                 if u.get("start_time") and u.get("end_time")
@@ -95,7 +99,9 @@ class TutorsAvailabilityService:
 
     async def _get_tutor_confirmed_bookings(self, tutor_id: str, start_date: datetime, end_date: datetime):
         try:
-            bookings = supabase.table("bookings").select("*, offers!inner(tutor_id)").eq("status", "accepted").eq("offers.tutor_id", tutor_id).gte("start_date", start_date.isoformat()).lte("end_date", end_date.isoformat()).execute()
+            bookings = supabase.table("bookings").select("*, offers!inner(tutor_id)").eq("status", "accepted").eq(
+                "offers.tutor_id", tutor_id).gte("start_date", start_date.isoformat()).lte("end_date",
+                                                                                           end_date.isoformat()).execute()
             filtered_bookings = []
             for booking in bookings.data:
                 if not (booking.get("start_date") and booking.get("end_date")):
