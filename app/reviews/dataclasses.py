@@ -10,13 +10,13 @@ class TutorReviewResponse(BaseModel):
     created_at: datetime
     student_id: str
     student_full_name: str
-    student_avatar_url: Optional[str]
+    student_avatar_url: Optional[str] = None
 
 
 class UpsertReview(BaseModel):
     student_id: str
     tutor_id: str
-    rating: Optional[int]
+    rating: Optional[int] = None
     comment: str
 
     class Config:
