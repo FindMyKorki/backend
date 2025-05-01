@@ -1,6 +1,6 @@
-from fastapi import HTTPException
 from core.db_connection import supabase
-from .dataclasses import MessageResponse, ChatReportRequest, ChatResponse
+from .dataclasses import MessageResponse, ChatReportRequest, ChatResponse, Message
+from fastapi import HTTPException
 
 
 class ChatsService:
@@ -34,34 +34,35 @@ class ChatsService:
                           .execute()
         
         return MessageResponse(messages=messages.data or [])
+      
 
     async def report_chat(self, chat_id: int, user_id: str, request: ChatReportRequest) -> str:
         """Report a chat conversation"""
-        chat = supabase.table("chats")\
-                      .select("*")\
-                      .eq("id", chat_id)\
-                      .execute()
-        
+        chat = supabase.table("chats") \
+            .select("*") \
+            .eq("id", chat_id) \
+            .execute()
+
         if not chat.data:
             raise HTTPException(status_code=404, detail="Chat not found")
-        
+
         chat_data = chat.data[0]
         reported_user_id = (
-            chat_data["student_id"] 
-            if user_id == chat_data["tutor_id"] 
+            chat_data["student_id"]
+            if user_id == chat_data["tutor_id"]
             else chat_data["tutor_id"]
         )
-        
+
         report_data = {
             "user_id": user_id,
             "reported_user_id": reported_user_id,
             "reason": request.reason,
             "message": f"Chat Report (ID: {chat_id}): {request.message}"
         }
-        
+
         result = supabase.table("user_reports").insert(report_data).execute()
-        
+
         if not result.data:
             raise HTTPException(status_code=500, detail="Failed to create report")
-        
+
         return "Chat successfully reported"

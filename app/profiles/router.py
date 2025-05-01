@@ -1,16 +1,61 @@
-from .service import ProfilesService
-from .dataclasses import CreateProfile, Profile
-from users.auth import authenticate_user
-from fastapi import APIRouter, Depends
+from typing import Optional, List
 
+from fastapi import APIRouter, Depends, Path, UploadFile
+from gotrue.types import UserResponse
+from users.auth import authenticate_user
+
+from .dataclasses import Profile, CreateProfileRequest, UpdateProfileRequest
+from .service import ProfilesService, _parse_from_create_request, _parse_from_update_request
+from users.dataclasses import MyUserResponse
 
 profiles_router = APIRouter()
 profiles_service = ProfilesService()
 
+
 @profiles_router.post('/profiles', response_model=Profile)
-async def create_profile(create_profile: CreateProfile, user_response=Depends(authenticate_user)):
-    return await profiles_service.create_profile(create_profile, user_response.user.id)
+async def create_profile(avatar: List[UploadFile] = None,
+                         profile_data: CreateProfileRequest = Depends(_parse_from_create_request),
+                         _user_response: UserResponse = Depends(authenticate_user)):
+    """
+    Create a new user profile.
+
+    Args:
+        avatar (List[UploadFile]): Optional image file to be set as user's avatar
+        profile_data (CreateProfileRequest): The profile data to be saved.
+        _user_response (UserResponse): The authenticated user making the request.
+
+    Returns:
+        Profile: The newly created profile with its details.
+    """
+    return await profiles_service.create_profile(_user_response, profile_data, avatar)
+
+
+@profiles_router.put('/profiles', response_model=Profile)
+async def update_profile(avatar: List[UploadFile] = None,
+                         profile_data: UpdateProfileRequest = Depends(_parse_from_update_request),
+                         _user_response: UserResponse = Depends(authenticate_user)):
+    """
+        Update a user profile.
+
+        Args:
+            avatar (List[UploadFile]): Optional image file to be set as user's new avatar
+            profile_data (UpdateProfileRequest): The profile data to be saved, containing full_name and remove_avatar bool.
+            _user_response (UserResponse): The authenticated user making the request.
+
+        Returns:
+            Profile: The newly created profile with its details.
+        """
+    return await profiles_service.update_profile(_user_response, profile_data, avatar)
 
 @profiles_router.get('/profiles/{id}', response_model=Profile)
-async def get_profile(id: str):
+async def get_profile(id: str = Path(...)):
+    """
+    Retrieve a profile by its ID.
+
+    Args:
+        id (str): The UUID of the profile to retrieve.
+
+    Returns:
+        Profile: The full details of the requested user profile.
+    """
     return await profiles_service.get_profile(id)

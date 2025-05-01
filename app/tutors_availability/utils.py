@@ -1,9 +1,11 @@
-from datetime import datetime, timedelta, timezone
+import calendar
+from datetime import datetime, timedelta, timezone, date
 from typing import List, Tuple
 
 
 def standardize_datetime(dt: datetime) -> datetime:
-    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc) if dt.tzinfo != timezone.utc else dt
+    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(
+        timezone.utc) if dt.tzinfo != timezone.utc else dt
 
 
 def parse_recurrence_rule(rule: str) -> dict:
@@ -27,7 +29,8 @@ def get_weekday_num(day_code: str) -> int:
     return days.get(day_code, 0)
 
 
-def generate_occurrences(start_date: datetime, end_date: datetime, recurrence_rule: str, query_start: datetime, query_end: datetime) -> List[Tuple[datetime, datetime]]:
+def generate_occurrences(start_date: datetime, end_date: datetime, recurrence_rule: str, query_start: datetime,
+                         query_end: datetime) -> List[Tuple[datetime, datetime]]:
     start_date = standardize_datetime(start_date)
     end_date = standardize_datetime(end_date)
     query_start = standardize_datetime(query_start)
@@ -71,7 +74,8 @@ def generate_occurrences(start_date: datetime, end_date: datetime, recurrence_ru
         while current_week_start <= until_date:
             for weekday in weekdays:
                 current_date = current_week_start + timedelta(days=weekday)
-                current_date = current_date.replace(hour=base_date.hour, minute=base_date.minute, second=base_date.second, microsecond=base_date.microsecond)
+                current_date = current_date.replace(hour=base_date.hour, minute=base_date.minute,
+                                                    second=base_date.second, microsecond=base_date.microsecond)
                 event_end = current_date + duration
                 if event_end >= query_start:
                     result.append((current_date, event_end))
@@ -85,17 +89,20 @@ def generate_occurrences(start_date: datetime, end_date: datetime, recurrence_ru
             if months_to_add:
                 new_month = ((current_date.month - 1 + months_to_add) % 12) + 1
                 new_year = current_date.year + (current_date.month - 1 + months_to_add) // 12
-                max_day = 30 if new_month in [4, 6, 9, 11] else 29 if new_month == 2 and (new_year % 4 == 0 and (new_year % 100 != 0 or new_year % 400 == 0)) else 28 if new_month == 2 else 31
+                max_day = 30 if new_month in [4, 6, 9, 11] else 29 if new_month == 2 and (new_year % 4 == 0 and (
+                        new_year % 100 != 0 or new_year % 400 == 0)) else 28 if new_month == 2 else 31
                 current_date = current_date.replace(year=new_year, month=new_month, day=min(current_date.day, max_day))
         while current_date <= until_date:
-            if (not rule_dict.get('BYMONTHDAY') or str(current_date.day) in rule_dict['BYMONTHDAY']) and (not rule_dict.get('BYMONTH') or str(current_date.month) in rule_dict['BYMONTH']):
+            if (not rule_dict.get('BYMONTHDAY') or str(current_date.day) in rule_dict['BYMONTHDAY']) and (
+                    not rule_dict.get('BYMONTH') or str(current_date.month) in rule_dict['BYMONTH']):
                 event_end = current_date + duration
                 if event_end >= query_start:
                     result.append((current_date, event_end))
             month = current_date.month - 1 + interval
             year = current_date.year + month // 12
             month = month % 12 + 1
-            max_day = 30 if month in [4, 6, 9, 11] else 29 if month == 2 and (year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)) else 28 if month == 2 else 31
+            max_day = 30 if month in [4, 6, 9, 11] else 29 if month == 2 and (
+                    year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)) else 28 if month == 2 else 31
             day = min(current_date.day, max_day)
             try:
                 current_date = current_date.replace(year=year, month=month, day=day)
@@ -105,7 +112,8 @@ def generate_occurrences(start_date: datetime, end_date: datetime, recurrence_ru
     return result
 
 
-def subtract_time_blocks(base_blocks: List[Tuple[datetime, datetime]], subtract_blocks: List[Tuple[datetime, datetime]]) -> List[Tuple[datetime, datetime]]:
+def subtract_time_blocks(base_blocks: List[Tuple[datetime, datetime]],
+                         subtract_blocks: List[Tuple[datetime, datetime]]) -> List[Tuple[datetime, datetime]]:
     result = []
     for base_start, base_end in base_blocks:
         current_blocks = [(base_start, base_end)]
@@ -125,6 +133,7 @@ def subtract_time_blocks(base_blocks: List[Tuple[datetime, datetime]], subtract_
             current_blocks = new_blocks
         result.extend(current_blocks)
     return result
+
 
 def merge_overlapping_blocks(blocks: List[Tuple[datetime, datetime]]) -> List[Tuple[datetime, datetime]]:
     if not blocks:
@@ -146,7 +155,8 @@ def parse_datetime(dt: str | datetime) -> datetime:
     return standardize_datetime(dt)
 
 
-async def generate_availability_blocks(availabilities, start_date: datetime, end_date: datetime) -> List[Tuple[datetime, datetime]]:
+async def generate_availability_blocks(availabilities, start_date: datetime, end_date: datetime) -> List[
+    Tuple[datetime, datetime]]:
     blocks = []
     for availability in availabilities:
         if "start_time" not in availability or "end_time" not in availability:
@@ -172,3 +182,8 @@ async def generate_availability_blocks(availabilities, start_date: datetime, end
             continue
     return merge_overlapping_blocks(blocks)
 
+
+def get_end_of_current_month() -> datetime:
+    today = date.today()
+    last_day = calendar.monthrange(today.year, today.month)[1]
+    return datetime(today.year, today.month, last_day, 23, 59, 59, tzinfo=timezone.utc)

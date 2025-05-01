@@ -1,22 +1,18 @@
-from pydantic import BaseModel
 from datetime import datetime
+from pydantic import BaseModel
 from typing import Optional
 
-
-class IssueReport(BaseModel):
-    id: int
-    created_at: datetime
-    user_id: str
+class CreateIssueReportRequest(BaseModel):
     reason: str
     message: str
 
     class Config:
         from_attributes = True
 
-
-class CreateIssueReport(BaseModel):
-    reason: str
-    message: str
+class IssueReport(CreateIssueReportRequest):
+    id: int
+    created_at: datetime
+    user_id: str
 
     class Config:
         from_attributes = True

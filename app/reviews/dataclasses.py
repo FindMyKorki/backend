@@ -10,4 +10,19 @@ class TutorReviewResponse(BaseModel):
     created_at: datetime
     student_id: str
     student_full_name: str
-    student_avatar_url: str
+    student_avatar_url: Optional[str] = None
+
+
+class UpsertReview(BaseModel):
+    student_id: str
+    tutor_id: str
+    rating: Optional[int] = None
+    comment: str
+
+    class Config:
+        from_attributes = True
+
+
+class Review(UpsertReview):
+    id: int
+    created_at: str
