@@ -34,12 +34,6 @@ class Chat(BaseModel):
         from_attributes = True
 
 
-class ChatWithLastMessage(Chat):
-    last_message: Optional[Message] = None
-
-    class Config:
-        from_attributes = True
-
 
 class ChatReportRequest(BaseModel):
     reason: str
@@ -48,3 +42,17 @@ class ChatReportRequest(BaseModel):
     class Config:
         from_attributes = True
 
+class ChatResponse(BaseModel):
+    chat_id: int
+    their_id: str
+    their_full_name: str
+    their_avatar_url: Optional[str] = None
+    last_message_id: Optional[int] = None
+    last_message_sender_id: Optional[str] = None
+    last_message_content: Optional[Any] = None
+    last_message_is_media: Optional[bool] = None
+    last_message_is_read: Optional[bool] = None
+    last_message_sent_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
