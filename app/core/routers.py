@@ -16,6 +16,7 @@ from tutors_availability.router import tutors_availability_router
 from typing import List
 from user_reports.router import user_reports_router
 from users.router import users_router
+from chat_logic.router import chat_logic_router
 from booking_attachments.router import attachments_router
 
 
@@ -42,6 +43,8 @@ registered_routers: List[Router] = [
     Router(router=issue_reports_router, tag="Issue Reports"),
     Router(router=user_reports_router, tag="User Reports"),
     Router(router=offer_reports_router, tag="Offer Reports"),
+    Router(router=chat_logic_router, tag="Chat_realtime"),
+    Router(router=chat_logic_router, tag="Chat Logic"),
     Router(router=test_lessons_router, tag="Test Lessons"),
     Router(router=attachments_router, tag="Booking Attachments")
 ]
