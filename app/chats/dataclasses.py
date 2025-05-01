@@ -36,6 +36,13 @@ class ChatReportRequest(BaseModel):
     class Config:
         from_attributes = True
 
+
+class MessageResponse(BaseModel):
+    messages: List[Message]
+
+    class Config:
+        from_attributes = True
+
 class ChatResponse(BaseModel):
     chat_id: int
     their_id: str

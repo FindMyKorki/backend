@@ -51,7 +51,7 @@ async def chat_websocket(websocket: WebSocket, chat_id: int):
 
     await manager.connect(websocket)
     try:
-        previous_messages = await chat_service.get_chat_messages(chat_id)
+        previous_messages = await chat_service.get_chat_messages(chat_id, user_id)
         await websocket.send_text(json.dumps({
             "type": "previous_messages",
             "messages": [

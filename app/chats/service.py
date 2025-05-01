@@ -11,14 +11,16 @@ class ChatsService:
         if not chats.data: raise HTTPException(404, "No chats found")
 
         return chats.data
-    
-    async def get_student_chats(self, student_id: str) -> list[ChatResponse]:
+
+
+    async def get_student_chats(self, student_id: str):
         """Get all chats for student with last messages"""
         chats = supabase.rpc("get_student_chats_with_last_messages", {"p_student_id": student_id}).execute()
 
         if not chats.data: raise HTTPException(404, "No chats found")
 
         return chats.data
+
 
     async def get_chat_messages(self, chat_id: int, user_id: str) -> MessageResponse:
         """Get all messages for specific chat"""
@@ -32,7 +34,7 @@ class ChatsService:
                           .eq("chat_id", chat_id)\
                           .order("sent_at")\
                           .execute()
-        
+
         return MessageResponse(messages=messages.data or [])
       
 

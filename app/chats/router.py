@@ -20,13 +20,13 @@ async def get_tutor_chats(_user_response: UserResponse = Depends(authenticate_us
         _user_response (UserResponse): The authenticated tutor's user data from the authentication dependency.
 
     Returns:
-        list[ChatWithLastMessage]: A list of chat objects with the latest message in each conversation.
+        list[ChatResponse]: A list of chat objects with the latest message in each conversation.
     """
     tutor_id = _user_response.user.id
     return await chats_service.get_tutor_chats(tutor_id)
 
 
-@chats_router.get("/student", response_model=list[ChatResponse])
+@chats_router.get("/student")
 async def get_student_chats(_user_response: UserResponse = Depends(authenticate_user)):
     """
     Retrieve all chat conversations for a student, including the most recent message from each.
@@ -35,12 +35,13 @@ async def get_student_chats(_user_response: UserResponse = Depends(authenticate_
         _user_response (UserResponse): The authenticated student's user data from the authentication dependency.
 
     Returns:
-        list[ChatWithLastMessage]: A list of chat objects with the latest message in each conversation.
+        list[CharResponse]: A list of chat objects with the latest message in each conversation.
     """
     student_id = _user_response.user.id
+    return await chats_service.get_student_chats(student_id)
 
 
-@chats_router.get("/{chat_id}/messages", response_model=list[Message])
+@chats_router.get("/{chat_id}/messages", response_model=MessageResponse)
 async def get_chat_messages(
         chat_id: int = Path(...),
         _user_response: UserResponse = Depends(authenticate_user)
