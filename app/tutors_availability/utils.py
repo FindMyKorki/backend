@@ -183,7 +183,7 @@ async def generate_availability_blocks(availabilities, start_date: datetime, end
     return merge_overlapping_blocks(blocks)
 
 
-def get_end_of_current_month() -> datetime:
-    today = date.today()
-    last_day = calendar.monthrange(today.year, today.month)[1]
-    return datetime(today.year, today.month, last_day, 23, 59, 59, tzinfo=timezone.utc)
+def get_end_of_month(start_date: datetime) -> datetime:
+    start_date = standardize_datetime(start_date)
+    last_day = calendar.monthrange(start_date.year, start_date.month)[1]
+    return datetime(start_date.year, start_date.month, last_day, 23, 59, 59)
