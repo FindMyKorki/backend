@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request, Depends, Path
 
 from .auth import authenticate_sign_out, authenticate_user
 from .dataclasses import RefreshTokensRequest, CodeForSessionResponse, TokensResponse, SignInResponse, CallbackResponse, \
-    CreateUserRequest, UserResponse, UpdateUserRequest
+    CreateUserRequest, UserResponse, UpdateUserRequest, MyUserResponse
 from .service import UsersService
 
 users_router = APIRouter()
@@ -38,7 +38,7 @@ async def refresh_tokens(request: RefreshTokensRequest):
 # New endpoints below
 
 @users_router.get('/user')
-async def get_user(_user_response=Depends(authenticate_user)):
+async def get_user(_user_response=Depends(authenticate_user)) -> MyUserResponse:
     """
     Retrieve the current authenticated user's information.
 
@@ -46,7 +46,7 @@ async def get_user(_user_response=Depends(authenticate_user)):
         _user_response (UserResponse): The authenticated user details from the authentication service.
 
     Returns:
-        UserResponse: The details of the authenticated user.
+        MyUserResponse: The details of the authenticated user.
     """
     return await users_service.get_self(_user_response)
 

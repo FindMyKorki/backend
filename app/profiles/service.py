@@ -6,7 +6,7 @@ from fastapi import HTTPException, UploadFile, File, Form
 from pydantic import ValidationError
 
 from crud.crud_provider import CRUDProvider
-from .dataclasses import BaseProfile, Profile, CreateProfileRequest, UpdateProfileRequest
+from .dataclasses import BaseProfile, Profile, CreateProfileRequest, UpdateProfileRequest, SetRoleRequest
 from core.db_connection import supabase
 from users.service import UsersService
 from users.dataclasses import UserResponse
@@ -55,6 +55,17 @@ class ProfilesService:
 
         return Profile.model_validate(new_profile)
 
+    async def setRole(self, user_response: UserResponse, request: SetRoleRequest) -> Profile:
+        user_data = await users_service.get_self(user_response=user_response)
+
+        if user_data.profile: raise HTTPException(409, "Profile already exists!")
+
+        profile_to_create = Profile(id = user_response.user.id, is_tutor = request.is_tutor)
+
+        new_profile = await crud_provider.create(profile_to_create.model_dump())
+
+        return Profile.model_validate(new_profile)
+
     async def get_profile(self, id: str) -> Profile:
         """
         Retrieve a user profile by its ID.
@@ -69,7 +80,7 @@ class ProfilesService:
 
         return Profile.model_validate(profile)
 
-    async def update_profile(self, user_response: UserResponse, update_profile_data: UpdateProfileRequest, avatar: Optional[List[UploadFile]] = None) -> Profile:
+    async def update_profile(self, user_response: UserResponse, update_profile_data: UpdateProfileRequest, avatar: Optional[List[UploadFile]] = None) -> BaseProfile:
         """
         Create a new profile for a user.
 
@@ -79,13 +90,14 @@ class ProfilesService:
             avatar (List[UploadFile]): Optional image file to be set as user's new avatar
 
         Returns:
-            Profile: The created user profile.
+            BaseProfile: The created user profile.
         """
 
         user_data = await users_service.get_self(user_response=user_response)
 
         if not user_data.profile: raise HTTPException(409, "Profile doesn't exist yet!")
 
+        avatar_url = user_data.profile.avatar_url or user_data.provider_avatar_url
 
         if avatar and avatar[0].size != 0:
             file_data = await self.upload_avatar(user_response.user.id, avatar)
@@ -100,12 +112,12 @@ class ProfilesService:
             if user_data.profile.avatar_url and SUPABASE_URL in user_data.profile.avatar_url:
                 await self.remove_avatar(user_data.profile.avatar_url)
 
-        profile_to_update = Profile(id = user_data.id, full_name=update_profile_data.full_name,
+        profile_to_update = BaseProfile(id = user_data.id, full_name=update_profile_data.full_name,
                                     is_tutor=user_data.profile.is_tutor, avatar_url=avatar_url)
 
         updated_profile = await crud_provider.update(profile_to_update.model_dump(), user_data.id)
 
-        return Profile.model_validate(updated_profile)
+        return BaseProfile.model_validate(updated_profile)
 
     async def delete_profile(self, id: str) -> Profile:
         """
