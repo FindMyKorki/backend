@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
+from middleware import add_request_logging
 from core.routers import registered_routers
 
 @asynccontextmanager
@@ -13,6 +14,7 @@ async def lifespan(app: FastAPI):
     print("Shutting down")
 
 app = FastAPI(docs_url="/", lifespan=lifespan)
+add_request_logging(app)
 
 for route in registered_routers:
     app.include_router(route.router, tags=[route.tag])
