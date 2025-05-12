@@ -118,7 +118,7 @@ class OffersService:
         offers = (
             supabase
             .table("offers")
-            .select("id, price, subjects(name, icon_url), levels(level), is_active")
+            .select("id, price, title, description, subjects(name, icon_url), levels(level), is_active")
             .eq("tutor_id", tutor_id)
             .eq("is_active", True)
             .execute()
@@ -146,10 +146,7 @@ class OffersService:
             supabase
             .table("offers")
             .select(
-                "id, price, "
-                "tutor_profiles(rating, profiles(full_name, avatar_url)), "
-                "subjects(name, icon_url), "
-                "levels(level)"
+                "id, price, title, description, tutor_profiles(rating, profiles(full_name, avatar_url)), subjects(name, icon_url), levels(level)"
             )
             .eq("is_active", True)
 

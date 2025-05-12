@@ -8,6 +8,8 @@ class OfferInterface(BaseModel):
     id: int
     price: Optional[float] = None
     subject_name: Optional[str] = None
+    description: Optional[str] = None
+    title: Optional[str] = None
     icon_url: Optional[str] = None
     level: Optional[str] = None
 
@@ -16,7 +18,6 @@ class OfferInterface(BaseModel):
 
 
 class OfferResponse(OfferInterface):
-    description: Optional[str] = None
     tutor_full_name: str
     tutor_avatar_url: Optional[str] = None
     tutor_rating: Optional[float] = None
