@@ -1,16 +1,43 @@
 services:
+  ngrok:
+    image: ngrok/ngrok
+    command: http backend:${BACKEND_PORT}
+    ports:
+      - "4040:4040"
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+
+  env_updater:
+    build:
+      context: .
+      dockerfile: Dockerfile_env_updater.dockerfile
+    depends_on:
+      - ngrok
+    volumes:
+      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - ENV_FILE=/app/.env
+      - BACKEND_PORT=${BACKEND_PORT}
+    command: python /app/start_ngrok.py
+
   backend:
     build:
       context: .
       dockerfile: Dockerfile_dev.dockerfile
+    depends_on:
+      - env_updater
     volumes:
       - ./:/app
     environment:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_KEY}
+      - BACKEND_PORT=${BACKEND_PORT}
       - FRONTEND_URL=${FRONTEND_URL}
+      - BACKEND_URL=${BACKEND_URL}
       - ENVIRONMENT=development
     ports:
       - ${BACKEND_PORT}:${BACKEND_PORT}
-    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "${BACKEND_PORT}", "--reload"]
+    command: ["bash", "/app/start_backend.sh"]
+#    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "${BACKEND_PORT}", "--reload"]
   
