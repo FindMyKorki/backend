@@ -57,8 +57,10 @@ class UpdateBooking(BaseModel):
         from_attributes = True
 
 
-class ProposeBookingRequest(UpdateBookingRequest):
+class ProposeBookingRequest(BaseModel):
     offer_id: int
+    start_date: datetime
+    end_date: datetime
 
     class Config:
         from_attributes = True
@@ -66,8 +68,6 @@ class ProposeBookingRequest(UpdateBookingRequest):
 
 class ProposeBooking(ProposeBookingRequest):
     student_id: str
-    start_date: str
-    end_date: str
     status: str = 'pending'
     is_paid: bool = False
 

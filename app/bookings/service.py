@@ -67,10 +67,9 @@ class BookingsService:
             offer_id=booking_data.offer_id,
             student_id=str(student_id),
             start_date=start_date,
-            end_date=end_date,
-            notes=booking_data.notes)
+            end_date=end_date)
 
-        booking = supabase.table("bookings").insert(new_booking.model_dump()).execute()
+        booking = supabase.table("bookings").insert(new_booking.model_dump(mode="json")).execute()
         if not booking.data:
             raise HTTPException(400, 'Booking proposal failed')
 

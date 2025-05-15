@@ -67,7 +67,7 @@ async def propose_booking(propose_booking_data: ProposeBookingRequest,
     Propose a new booking for a student.
 
     Args:
-        propose_booking_data (ProposeBookingRequest): The details of the proposed booking (dates, tutor ID, etc.).
+        propose_booking_data (ProposeBookingRequest): The details of the proposed booking (dates, offer ID).
         _user_response (UserResponse): The currently authenticated user.
 
     Returns:
