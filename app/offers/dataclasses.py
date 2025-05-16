@@ -6,6 +6,7 @@ from typing import Optional
 
 class OfferInterface(BaseModel):
     id: int
+    tutor_id: str
     price: Optional[float] = None
     subject_name: Optional[str] = None
     description: Optional[str] = None

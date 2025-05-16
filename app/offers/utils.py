@@ -26,6 +26,7 @@ def flatten_offer_data(data: dict) -> OfferResponse:
 
     return OfferResponse(
         id=data["id"],
+        tutor_id=tutor_profile.get("id"),
         description=data.get("description"),
         tutor_full_name=profile.get("full_name", "Unknown"),
         tutor_avatar_url=profile.get("avatar_url"),
@@ -50,7 +51,9 @@ def flatten_tutor_offer_data(data: dict) -> TutorOfferResponse:
     level = data.pop("levels", {}) or {}
     result = TutorOfferResponse(
         id=data.get("id"),
+        tutor_id=data.get("tutor_id"),
         price=data.get("price"),
+        description=data.get("description"),
         subject_name=subject.get("name"),
         icon_url=subject.get("icon_url"),
         level=level.get("level"),
@@ -70,10 +73,12 @@ def flatten_active_offers(data: list[dict]) -> list[ActiveOfferResponse]:
         result.append(
             ActiveOfferResponse(
                 id=offer.get("id"),
+                tutor_id=offer.get("tutor_id"),
                 tutor_full_name=profile.get("full_name", "Unknown"),
                 tutor_avatar_url=profile.get("avatar_url"),
                 tutor_rating=tutor_profile.get("rating"),
                 price=offer.get("price"),
+                description=offer.get("description"),
                 subject_name=subject.get("name"),
                 icon_url=subject.get("icon_url"),
                 level=level.get("level"),

@@ -61,6 +61,7 @@ class ProposeBookingRequest(BaseModel):
     offer_id: int
     start_date: datetime
     end_date: datetime
+    notes: Optional[str] = None
 
     class Config:
         from_attributes = True

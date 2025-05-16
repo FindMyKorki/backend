@@ -11,7 +11,7 @@ offers_service = OffersService()
 
 
 @offers_router.get("/offers/{offer_id}", response_model=OfferResponse)
-async def get_offer(offer_id: int = Path(...)) -> OfferResponse:
+async def get_offer(offer_id: int = Path(...)) ->   OfferResponse:
     """
     Retrieve a specific offer by its ID
 
@@ -19,7 +19,7 @@ async def get_offer(offer_id: int = Path(...)) -> OfferResponse:
         offer_id (int): Unique identifier of the offer
 
     Returns:
-        OfferResponse: Offer details including id, price, description, tutor_avatar_url, tutor_rating, subject_name, icon_url, level
+        OfferResponse: Offer details including id, tutor_id, price, description, tutor_avatar_url, tutor_rating, subject_name, icon_url, level
     """
     return await offers_service.get_offer(offer_id)
 
