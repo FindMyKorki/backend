@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Path, Form, UploadFile, File
 from gotrue.types import UserResponse
 from users.auth import authenticate_user
 
-from bookings.service import _parse_from_request
+from bookings.service import _parse_from_put_request, _parse_from_post_request
 
 bookings_router = APIRouter()
 bookings_service = BookingsService()
@@ -43,7 +43,7 @@ async def get_bookings(_user_response: UserResponse = Depends(authenticate_user)
 
 @bookings_router.put("/bookings/{booking_id}", response_model=str)
 async def update_booking(files: List[UploadFile] = None,
-                        booking_data: UpdateBookingRequest = Depends(_parse_from_request),
+                        booking_data: UpdateBookingRequest = Depends(_parse_from_put_request),
                         booking_id: int = Path(...),
                         _user_response: UserResponse = Depends(authenticate_user)):
     """
@@ -61,7 +61,8 @@ async def update_booking(files: List[UploadFile] = None,
 
 
 @bookings_router.post("/bookings:propose", response_model=str)
-async def propose_booking(propose_booking_data: ProposeBookingRequest,
+async def propose_booking(files: List[UploadFile] = None,
+                          booking_data: ProposeBookingRequest = Depends(_parse_from_post_request),
                           _user_response: UserResponse = Depends(authenticate_user)):
     """
     Propose a new booking for a student.
@@ -69,11 +70,12 @@ async def propose_booking(propose_booking_data: ProposeBookingRequest,
     Args:
         propose_booking_data (ProposeBookingRequest): The details of the proposed booking (dates, offer ID).
         _user_response (UserResponse): The currently authenticated user.
+        files: Files requested to be uploaded as attachments
 
     Returns:
         str: A confirmation message or the ID of the proposed booking.
     """
-    return await bookings_service.propose_booking(booking_data=propose_booking_data, student_id=_user_response.user.id)
+    return await bookings_service.propose_booking(booking_data, _user_response.user.id, files)
 
 
 @bookings_router.post("/bookings/{booking_id}:accept", response_model=str)

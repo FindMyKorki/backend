@@ -5,6 +5,7 @@ from core.db_connection import supabase
 from crud.crud_provider import CRUDProvider
 from fastapi import HTTPException, Form, UploadFile
 from pydantic import ValidationError
+from datetime import datetime
 
 from .dataclasses import Booking, UpsertBooking, TutorBookingResponse, StudentBookingResponse, ProposeBooking, \
     ProposeBookingRequest, UpdateBooking, UpdateBookingRequest
@@ -56,7 +57,7 @@ class BookingsService:
                 return bookings_by_student.data
         raise HTTPException(403, f"You are not a student!")
 
-    async def propose_booking(self, booking_data: ProposeBookingRequest, student_id: str) -> str:
+    async def propose_booking(self, booking_data: ProposeBookingRequest, student_id: str, files: Optional[List[UploadFile]] = None) -> str:
         start_date = booking_data.start_date.isoformat()
         end_date = booking_data.end_date.isoformat()
 
@@ -74,6 +75,9 @@ class BookingsService:
         if not booking.data:
             raise HTTPException(400, 'Booking proposal failed')
 
+        if files and files[0].size != 0:
+            await uploadAttachments(booking.data[0].get("id"), files)
+
         return 'Booking proposed successfully'
 
     async def update_booking(self, booking_id: int, user_id: str, update_booking_data: UpdateBookingRequest, files: Optional[List[UploadFile]] = None) -> str:
@@ -84,14 +88,7 @@ class BookingsService:
 
         # attachments upload logic
         if files and files[0].size != 0:
-            files_data = await booking_attachments_service.upload_files(booking_id, files)
-            for file_data in files_data:
-                # It would be great to push all of them in a single query, dont know how to do it yet tho
-                attachment = UpsertBookingAttachment(
-                    booking_id=booking_id,
-                    attachment_url=f"{SUPABASE_URL}/storage/v1/object/public/{file_data.full_path}"
-                )
-                supabase.table("booking_attachments").insert(attachment.model_dump()).execute()
+            await uploadAttachments(booking_id, files)
 
         # attachments removal logic
         if update_booking_data.remove_files and update_booking_data.remove_files[0] != "":
@@ -222,13 +219,33 @@ class BookingsService:
                 raise HTTPException(403, f"You are not a tutor!")
             raise
 
+async def uploadAttachments(booking_id: int, files: List[UploadFile]):
+    files_data = await booking_attachments_service.upload_files(booking_id, files)
+    for file_data in files_data:
+    # It would be great to push all of them in a single query, dont know how to do it yet tho
+        attachment = UpsertBookingAttachment(
+            booking_id=booking_id,
+                attachment_url=f"{SUPABASE_URL}/storage/v1/object/public/{file_data.full_path}"
+        )
+        supabase.table("booking_attachments").insert(attachment.model_dump()).execute()
+
 # Some weird thing specific to fastAPI
 # it's required to send both standard data (in our case notes and remove_files
 # and files in one single request using form
-async def _parse_from_request(notes: Optional[str] = Form(None),
+async def _parse_from_put_request(notes: Optional[str] = Form(None),
                                 remove_files: Optional[List[str]] = Form(None)) -> UpdateBookingRequest:
 
     try:
         return UpdateBookingRequest(notes=notes, remove_files=remove_files)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=e.errors())
+
+async def _parse_from_post_request(start_date: datetime = Form(datetime),
+                                end_date: datetime = Form(datetime),
+                                offer_id: int = Form(int),
+                                notes: Optional[str] = Form(None)
+                            ) -> ProposeBookingRequest:
+    try:
+        return ProposeBookingRequest(start_date = start_date, end_date = end_date, offer_id = offer_id, notes = notes)
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=e.errors())
