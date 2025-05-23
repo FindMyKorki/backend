@@ -39,7 +39,7 @@ class ActiveOfferResponse(OfferInterface):
     tutor_full_name: str
     tutor_avatar_url: Optional[str] = None
     tutor_rating: Optional[float] = None
-
+    total_records: Optional[int] = None
 
 # CRUD
 class Level(BaseModel):

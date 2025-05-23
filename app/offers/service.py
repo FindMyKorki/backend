@@ -1,3 +1,6 @@
+from datetime import datetime, timedelta
+from typing import Optional
+
 from core.db_connection import supabase
 from crud.crud_provider import CRUDProvider
 from enum import Enum
@@ -9,15 +12,9 @@ from .dataclasses import OfferResponse, UpdateOfferRequest, TutorOfferResponse, 
 from .utils import flatten_offer_data, flatten_tutor_offers_data, flatten_tutor_offer_data, flatten_active_offers
 
 
-class SortBy(str, Enum):
-    rating = "rating"
-    price = "price"
-    name = "name"
-
-
 class Order(str, Enum):
-    increasing = "increasing"
-    decreasing = "decreasing"
+    increasing = "ASC"
+    decreasing = "DESC"
 
 
 class OffersService:
@@ -129,40 +126,22 @@ class OffersService:
 
         return flatten_tutor_offers_data(offers.data)
 
-    async def get_active_offers(self, sort_by: str, order: str) -> list[ActiveOfferResponse]:
-        order_map = {
-            SortBy.rating: ("rating", "tutor_profiles"),
-            SortBy.price: ("price", None),
-            SortBy.name: ("full_name", "tutor_profiles.profiles")
-        }
+    async def get_active_offers(self, level_id: int, subject_id: int, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None, min_price: Optional[float] = None, max_price: Optional[float] = None, order: Optional[str] = 'ASC', limit: Optional[int] = 5, offset: Optional[int] = 0) -> list[ActiveOfferResponse]:
 
-        if sort_by not in order_map:
-            raise HTTPException(status_code=400, detail="Invalid sort_by value")
 
-        column, foreign_table = order_map[sort_by]
-        sort_desc = order == Order.decreasing
+        filtered_offers = supabase.rpc('filter_offers', {
+            'p_level_id': level_id,
+            'p_subject_id': subject_id,
+            'p_start_date': start_date,
+            'p_end_date': end_date,
+            'p_min_price': min_price,
+            'p_max_price': max_price,
+            'p_sort_order': order,
+            'p_limit': limit,
+            'p_offset': offset
+        }).execute()
 
-        query = (
-            supabase
-            .table("offers")
-            .select(
-                "id, tutor_id, price, title, description, tutor_profiles(rating, profiles(full_name, avatar_url)), subjects(name, icon_url), levels(level)"
-            )
-            .eq("is_active", True)
-
-        )
-
-        if foreign_table:
-            query = query.order(column, desc=sort_desc, foreign_table=foreign_table)
-        else:
-            query = query.order(column, desc=sort_desc)
-
-        offers = query.execute()
-
-        if offers.data is None or len(offers.data) == 0:
-            raise HTTPException(status_code=404, detail="Offers not found")
-
-        return flatten_active_offers(offers.data)
+        return filtered_offers.data
 
     # CRUD
     async def create_offer(self, tutor_id: str, offer: CreateOffer) -> Offer:

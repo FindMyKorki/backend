@@ -1,10 +1,13 @@
+from datetime import datetime
+from typing import Optional
+
 from fastapi import APIRouter, Depends, Path, Query
 from gotrue.types import UserResponse
 from typing_extensions import Literal
 from users.auth import authenticate_user
 
 from .dataclasses import OfferResponse, UpdateOfferRequest, TutorOfferResponse, ActiveOfferResponse
-from .service import OffersService, SortBy, Order
+from .service import OffersService, Order
 
 offers_router = APIRouter()
 offers_service = OffersService()
@@ -118,17 +121,26 @@ async def get_tutor_active_offer(tutor_id: str = Path(...)) -> list[TutorOfferRe
 
 @offers_router.get("/active-offers", response_model=list[ActiveOfferResponse])
 async def get_active_offers(
-        sort_by: SortBy = Query(...),
-        order: Order = Query(...)
+        level_id: int,
+        subject_id: int,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        min_price: Optional[float] = None,
+        max_price: Optional[float] = None,
+        order: Optional[Order] = 'ASC',
+        limit: Optional[int] = 5,
+        offset: Optional[int] = 0
 ) -> list[TutorOfferResponse]:
     """
     Retrieve a list of all active offers in the system, with sorting options.
 
     Args:
-        sort_by (SortBy): Field to sort offers by rating, price or name.
-        order (Order): Sorting order increasing or decreasing.
-
+        level_id - id of selected level (required)
+        subject_id - id of selected subject (required)
+        start_date, end_date - together they form a date frame for which you want tutor to be available at (optional)
+        min_price, max_price - optional
+        order - order direction for offers price, either ASC or DESC
     Returns:
         List[ActiveOfferResponse]: Sorted list of active tutor offers.
     """
-    return await offers_service.get_active_offers(sort_by, order)
+    return await offers_service.get_active_offers(level_id, subject_id, start_date, end_date, min_price, max_price, order, limit, offset)
