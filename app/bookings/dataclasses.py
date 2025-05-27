@@ -24,6 +24,7 @@ class TutorBookingResponse(Booking):
     subject_icon_url: Optional[str]
     student_full_name: str
     avatar_url: str
+    price: float
 
     class Config:
         from_attributes = True
