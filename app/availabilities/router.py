@@ -38,6 +38,20 @@ async def create_tutor_availability(request: AvailabilityHours,
     """
     return await availabilities_service.create_tutor_availability(_user_response.user.id, request)
 
+@availabilities_router.delete("/availabilities/${availability_id}")
+async def delete_tutor_availability(availability_id: int = Path(...), _user_response: UserResponse = Depends(authenticate_user)):
+    """
+    Delete an existing availability that belongs to currently logged in tutor
+
+    Args:
+        availability_id (int): id of availability that you want to remove
+        _user_response (UserResponse): The currently authenticated user
+
+    Returns:
+        Deleted availability data
+    """
+    return await availabilities_service.delete_availability(availability_id, _user_response.user.id)
+
 
 @availabilities_router.post("/unavailabilities/", response_model=UnavailabilityHours)
 async def create_tutor_unavailability(request: UnavailabilityHours,
@@ -53,3 +67,17 @@ async def create_tutor_unavailability(request: UnavailabilityHours,
         UnavailabilityHours: Added record of UnavailabilityHours
     """
     return await availabilities_service.create_tutor_unavailability(_user_response.user.id, request)
+
+@availabilities_router.delete("/unavailabilities/{unavailability_id}")
+async def delete_tutor_availability(unavailability_id: int = Path(...), _user_response: UserResponse = Depends(authenticate_user)):
+    """
+    Delete an existing availability that belongs to currently logged in tutor
+
+    Args:
+        unavailability_id (int): id of unavailability that you want to remove
+        _user_response (UserResponse): The currently authenticated user
+
+    Returns:
+        Deleted unavailability data
+    """
+    return await availabilities_service.delete_unavailability(unavailability_id, _user_response.user.id)

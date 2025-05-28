@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from .dataclasses import AvailabilityHours, UnavailabilityHours
 
 crud_provider = CRUDProvider('availabilities', 'tutor_id')
+unavailability_crud_provider = CRUDProvider('unavailabilities', 'tutor_id')
 
 
 class AvailabilityService:
@@ -103,7 +104,7 @@ class AvailabilityService:
 
         return AvailabilityHours.model_validate(updated_availability)
 
-    async def delete_availability(self, id: int, user_id: str) -> AvailabilityHours:
+    async def delete_availability(self, id: int, user_id: str):
         """
         Delete a specific availability slot for a given user.
 
@@ -116,7 +117,7 @@ class AvailabilityService:
         """
         deleted_availability = await crud_provider.delete(id, user_id)
 
-        return AvailabilityHours.model_validate(deleted_availability)
+        return deleted_availability
 
     async def _check_tutor_exists(self, tutor_id: str):
         crud_provider_tutor_profile = CRUDProvider('tutor_profiles', 'tutor_id')
@@ -126,3 +127,18 @@ class AvailabilityService:
             if e.status_code == 502:
                 raise HTTPException(403, f"You are not a tutor!")
             raise
+
+    async def delete_unavailability(self, id: int, user_id: str):
+        """
+        Delete a specific unavailability slot for a tutor.
+
+        Args:
+            id (int): ID of the unavailability record to delete.
+            user_id (str): UUID of the tutor who owns the record.
+
+        Returns:
+            Unavailability: The deleted unavailability record.
+        """
+        deleted_unavailability = await unavailability_crud_provider.delete(id, user_id)
+
+        return deleted_unavailability
