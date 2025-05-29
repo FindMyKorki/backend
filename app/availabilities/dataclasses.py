@@ -13,3 +13,11 @@ class UnavailabilityHours(BaseModel):
 
 class AvailabilityHours(UnavailabilityHours):
     recurrence_rule: Optional[str] = None
+
+class UnavailabilityResponse(UnavailabilityHours):
+    id: int
+    tutor_id: str
+
+class AvailabilityResponse(AvailabilityHours):
+    id: int
+    tutor_id: str

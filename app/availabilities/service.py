@@ -2,24 +2,41 @@ from core.db_connection import supabase
 from crud.crud_provider import CRUDProvider
 from fastapi import HTTPException
 
-from .dataclasses import AvailabilityHours, UnavailabilityHours
+from .dataclasses import AvailabilityHours, UnavailabilityHours, AvailabilityResponse, UnavailabilityResponse
 
 crud_provider = CRUDProvider('availabilities', 'tutor_id')
 unavailability_crud_provider = CRUDProvider('unavailabilities', 'tutor_id')
 
 
 class AvailabilityService:
-    async def get_tutor_availabilities(self, tutor_id: str) -> list[AvailabilityHours]:
+    async def get_tutor_availabilities(self, tutor_id: str) -> list[AvailabilityResponse]:
         response = (
             supabase
             .table("availabilities")
-            .select("start_time, end_time, recurrence_rule")
+            .select("id, tutor_id, start_time, end_time, recurrence_rule")
             .eq("tutor_id", tutor_id)
             .execute()
         )
 
-        if response.data is None or len(response.data) == 0:
-            raise HTTPException(status_code=404, detail="Offer not found")
+        # if response.data is None or len(response.data) == 0:
+        #     raise HTTPException(status_code=404, detail="No availabilities found")
+
+        # ^^^^^ instead of that, we just return empty list
+
+        return response.data
+
+    async def get_tutor_unavailabilities(self, tutor_id: str) -> list[UnavailabilityResponse]:
+        response = (
+            supabase
+            .table("unavailabilities")
+            .select("id, tutor_id, start_time, end_time")
+            .eq("tutor_id", tutor_id)
+            .execute()
+        )
+
+        # if response.data is None or len(response.data) == 0:
+        #     raise HTTPException(status_code=404, detail="No availabilities found")
+        # ^^^^^ instead of that, we just return empty list
 
         return response.data
 
