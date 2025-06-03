@@ -22,6 +22,10 @@ class UpsertReview(BaseModel):
     class Config:
         from_attributes = True
 
+class CreateReviewRequest(BaseModel):
+    tutor_id: str
+    comment: str
+    rating: int
 
 class Review(UpsertReview):
     id: int
