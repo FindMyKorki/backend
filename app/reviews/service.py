@@ -54,12 +54,12 @@ class ReviewsService:
 
         tutor_exists = supabase.table("tutor_profiles").select("id").eq("id", tutor_id).execute()
         if not tutor_exists.data:
-            raise ValueError(f"Tutor with id {tutor_id} does not exist")
+            raise HTTPException(status_code=404, detail="Couldn't find tutor with that id")
 
         already_reviewed = supabase.table("reviews").select("*").eq("tutor_id", tutor_id).eq("student_id", user_id).execute()
         print(already_reviewed.data)
         if len(already_reviewed.data) > 0:
-            raise ValueError("You already reviewed this tutor")
+            raise HTTPException(status_code=409, detail="You already reviewed this tutor")
 
         if not (1 <= request.rating <= 5):
             raise ValueError("Rating must be a number between 1 and 5")
@@ -72,7 +72,7 @@ class ReviewsService:
     async def delete_tutor_review(self, review_id: int, user_id: str) -> Review:
         review_exists = supabase.table("reviews").select("*").eq("id", review_id).eq("student_id", user_id).execute()
         if len(review_exists.data) == 0:
-            raise ValueError("Your review with that id does not exist")
+            raise HTTPException(status_code=404, detail="Your review with that id does not exist")
 
         return await self.delete_review(review_id)
 
