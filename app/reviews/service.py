@@ -44,8 +44,8 @@ class ReviewsService:
             .execute()
         )
 
-        if response.data is None or len(response.data) == 0:
-            raise HTTPException(status_code=404, detail="No reviews found")
+        # if response.data is None or len(response.data) == 0:
+        #     raise HTTPException(status_code=404, detail="No reviews found")
 
         return flatten_tutor_reviews_data(response.data)
 
