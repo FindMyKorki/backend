@@ -16,8 +16,8 @@ async def get_tutor_profile_data(tutor_id: str) -> TutorResponse:
 
     feature_review_student_response = {}
 
-    if tutor.data and len(tutor.data) > 0:
-        student_id = tutor.data[0]["reviews"].get("student_id")
+    if tutor.data and tutor.data[0].get("reviews"):
+        student_id = tutor.data[0].get("reviews").get("student_id")
 
         if student_id:
             res = (
